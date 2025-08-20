@@ -1,5 +1,5 @@
 # NEET PG & INICET PYQs Quiz for Medicos
-##Built my Medico for the medicoes
+
 (React + Vite + Tailwind)
 
 Mobile-first quiz app for practicing past-year questions by **subject** and **subtopic** with **timer**, **score review**, **bookmarking**, and **JSON import**.
