@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "title": "Sample NEET/INICET Bank",
+    "updated": "2025-08-21"
+  },
+  "items": [
+    {
+      "id": "Q1",
+      "exam": "NEET PG",
+      "year": 2023,
+      "subject": "Medicine",
+      "subtopic": "Cardiology",
+      "stem": "Which heart sound corresponds to closure of the mitral and tricuspid valves?",
+      "choices": [
+        {
+          "id": "A",
+          "text": "S1"
+        },
+        {
+          "id": "B",
+          "text": "S2"
+        },
+        {
+          "id": "C",
+          "text": "S3"
+        },
+        {
+          "id": "D",
+          "text": "S4"
+        }
+      ],
+      "answer": "A",
+      "explanation": "S1 is due to closure of AV valves (mitral & tricuspid).",
+      "difficulty": "Easy"
+    },
+    {
+      "id": "Q2",
+      "exam": "INICET",
+      "year": 2022,
+      "subject": "Pediatrics",
+      "subtopic": "Congenital Heart Disease",
+      "stem": "The most common cyanotic congenital heart disease in newborns is:",
+      "choices": [
+        {
+          "id": "A",
+          "text": "Atrial septal defect"
+        },
+        {
+          "id": "B",
+          "text": "Ventricular septal defect"
+        },
+        {
+          "id": "C",
+          "text": "Tetralogy of Fallot"
+        },
+        {
+          "id": "D",
+          "text": "Patent ductus arteriosus"
+        }
+      ],
+      "answer": "C",
+      "explanation": "Tetralogy of Fallot is the commonest cyanotic CHD.",
+      "difficulty": "Medium"
+    }
+  ]
+}
