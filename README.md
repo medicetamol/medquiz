@@ -1,4 +1,5 @@
-# NEET PG & INICET PYQs Quiz (React + Vite + Tailwind)
+# NEET PG & INICET PYQs Quiz for Medicos
+(React + Vite + Tailwind)
 
 Mobile-first quiz app for practicing past-year questions by **subject** and **subtopic** with **timer**, **score review**, **bookmarking**, and **JSON import**.
 
