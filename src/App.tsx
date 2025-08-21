@@ -12,7 +12,7 @@ export default function App() {
         <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between">
           {/* Logo + App name */}
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="mediCetamol" className="w-8 h-8" />
+            <img src="/public/logo.png" alt="mediCetamol" className="w-8 h-8" />
             <span className="text-xl font-bold">mediCetamol</span>
           </div>
 
