@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Menu, X } from "lucide-react"; // icons for hamburger menu
 
 export default function App() {
   const [open, setOpen] = useState(false);
@@ -53,10 +52,10 @@ export default function App() {
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2"
+            className="md:hidden p-2 border rounded text-sm"
             onClick={() => setOpen((prev) => !prev)}
           >
-            {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {open ? "✖" : "☰"}
           </button>
         </div>
 
