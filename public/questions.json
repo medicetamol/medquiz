@@ -12,55 +12,31 @@
       "subtopic": "Cardiology",
       "stem": "Which heart sound corresponds to closure of the mitral and tricuspid valves?",
       "choices": [
-        {
-          "id": "A",
-          "text": "S1"
-        },
-        {
-          "id": "B",
-          "text": "S2"
-        },
-        {
-          "id": "C",
-          "text": "S3"
-        },
-        {
-          "id": "D",
-          "text": "S4"
-        }
+        { "id": "A", "text": "S1" },
+        { "id": "B", "text": "S2" },
+        { "id": "C", "text": "S3" },
+        { "id": "D", "text": "S4" }
       ],
       "answer": "A",
-      "explanation": "S1 is due to closure of AV valves (mitral & tricuspid).",
+      "explanation": "S1 is due to closure of AV valves.",
       "difficulty": "Easy"
     },
     {
       "id": "Q2",
       "exam": "INICET",
-      "year": 2022,
+      "year": 2024,
       "subject": "Pediatrics",
-      "subtopic": "Congenital Heart Disease",
-      "stem": "The most common cyanotic congenital heart disease in newborns is:",
+      "subtopic": "Neonatology",
+      "stem": "The most common congenital heart defect causing cyanosis in newborns is?",
       "choices": [
-        {
-          "id": "A",
-          "text": "Atrial septal defect"
-        },
-        {
-          "id": "B",
-          "text": "Ventricular septal defect"
-        },
-        {
-          "id": "C",
-          "text": "Tetralogy of Fallot"
-        },
-        {
-          "id": "D",
-          "text": "Patent ductus arteriosus"
-        }
+        { "id": "A", "text": "Atrial septal defect" },
+        { "id": "B", "text": "Ventricular septal defect" },
+        { "id": "C", "text": "Tetralogy of Fallot" },
+        { "id": "D", "text": "Patent ductus arteriosus" }
       ],
       "answer": "C",
-      "explanation": "Tetralogy of Fallot is the commonest cyanotic CHD.",
-      "difficulty": "Medium"
+      "explanation": "Tetralogy of Fallot is the most common cyanotic CHD.",
+      "difficulty": "Moderate"
     }
   ]
 }
