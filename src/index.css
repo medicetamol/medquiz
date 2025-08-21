@@ -3,7 +3,15 @@
 @tailwind utilities;
 
 :root {
-  --bg: #f6f4ff;
+  --bg-color: #0d0d0d;
+  --text-color: #e0e0e0;
+  --primary-color: #4da6ff;
 }
 
-* { -webkit-tap-highlight-color: transparent; }
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+}
