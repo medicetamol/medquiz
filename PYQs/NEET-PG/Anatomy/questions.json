@@ -3,7 +3,7 @@
   {
     "id": "PG23A001",
     "y": 2023,
-    "topic": "Abdomen and Pelvis",
+    "t": "Abdomen and Pelvis",
     "q": "Image: Diagram of the inguinal region showing the inguinal canal and spermatic cord, with the marked opening in the posterior wall of the canal.\nA defect in which of the following forms the structure marked below?",
     "o": [
       "Internal oblique",
@@ -11,12 +11,12 @@
       "Parietal peritoneum",
       "Fascia transversalis"
     ],
-    "a": "D"
+    "a": 3
   },
   {
     "id": "PG23A002",
     "y": 2023,
-    "topic": "Head and Neck",
+    "t": "Head and Neck",
     "q": "A student had his jaw locked while yawning. Which of the following muscles is attached to the articular disc of the temporomandibular joint?",
     "o": [
       "Lateral pterygoid",
@@ -24,12 +24,12 @@
       "Medial pterygoid",
       "Masseter"
     ],
-    "a": "A"
+    "a": 0
   },
   {
     "id": "PG23A003",
     "y": 2023,
-    "topic": "Histology",
+    "t": "Histology",
     "q": "Image: Histological section showing a rounded capillary tuft enclosed within a clear capsule and surrounded by renal tubules.\nThe given histology image is of ?",
     "o": [
       "Leydig cells of testis",
@@ -37,12 +37,12 @@
       "Hassall's corpuscles",
       "Glomerulus"
     ],
-    "a": "D"
+    "a": 3
   },
   {
     "id": "PG23A004",
     "y": 2023,
-    "topic": "Thorax",
+    "t": "Thorax",
     "q": "Image: Diagram of the great vessels showing a vascular defect near the aortic arch and pulmonary artery.\nA defect in which of the following aortic arches causes the defect shown in the image?",
     "o": [
       "4th right",
@@ -50,12 +50,12 @@
       "6th right",
       "6th left"
     ],
-    "a": "D"
+    "a": 3
   },
   {
     "id": "PG23A005",
     "y": 2023,
-    "topic": "Embryology",
+    "t": "Embryology",
     "q": "Image: Embryonic cross-section with numbered structures; structure 4 is marked near the midline connecting-stalk/umbilical region.\nWhich of the following structures develops from the structure marked 4?",
     "o": [
       "Medial umbilical ligament",
@@ -63,12 +63,12 @@
       "Meckel's diverticulum",
       "Ligamentum teres"
     ],
-    "a": "B"
+    "a": 1
   },
   {
     "id": "PG23A006",
     "y": 2023,
-    "topic": "Lower Limb",
+    "t": "Lower Limb",
     "q": "Image: Knee radiograph showing four numbered markers around the distal femur and proximal tibia/fibula.\nInjury at which of the following marked sites causes failure of dorsiflexion?",
     "o": [
       "3",
@@ -76,12 +76,12 @@
       "1",
       "4"
     ],
-    "a": "A"
+    "a": 0
   },
   {
     "id": "PG23A007",
     "y": 2023,
-    "topic": "Head and Neck",
+    "t": "Head and Neck",
     "q": "A patient presents with swelling under the left ear lobule and complains of pain. Which of the following structures is the likely cause of the pain?",
     "o": [
       "Facial nerve",
@@ -89,7 +89,7 @@
       "Auriculotemporal nerve",
       "Investing layer of deep cervical fascia"
     ],
-    "a": "B"
+    "a": 1
   }
 ]
 }
