@@ -3,18 +3,46 @@ import type { Exam, PYQExplanation, PYQQuestion } from "../types";
 const questionModules = import.meta.glob("../../PYQs/*/*/questions.json", {
   eager: true,
   query: "?raw",
-  import: "default"
+  import: "default",
 }) as Record<string, string>;
 
 const explanationModules = import.meta.glob("../../PYQs/*/*/explanations.json", {
   eager: true,
   query: "?raw",
-  import: "default"
+  import: "default",
 }) as Record<string, string>;
 
-function parseQuestions(raw: string): PYQQuestion[] {
+type CompactQuestion = {
+  id: string;
+  y: number;
+  t: string;
+  q: string;
+  o: string[];
+  a: number;
+  image?: string;
+};
+
+function parseQuestions(
+  raw: string,
+  exam: Exam,
+  subjectId: string
+): PYQQuestion[] {
   try {
-    return JSON.parse(raw).questions ?? [];
+    const data = JSON.parse(raw);
+    const questions: CompactQuestion[] = data.questions ?? [];
+
+    return questions.map((q) => ({
+      id: q.id,
+      exam,
+      year: q.y,
+      subjectId,
+      topicId: q.t,
+      topicName: q.t,
+      question: q.q,
+      options: q.o,
+      answer: q.a,
+      ...(q.image ? { image: q.image } : {}),
+    }));
   } catch {
     return [];
   }
@@ -28,23 +56,41 @@ function parseExplanations(raw: string): PYQExplanation[] {
   }
 }
 
-export function loadQuestions(exam: Exam, subjectId: string): PYQQuestion[] {
-  const pathPart = subjectId;
+export function loadQuestions(
+  exam: Exam,
+  subjectId: string
+): PYQQuestion[] {
   const key = Object.keys(questionModules).find(
-    (key) => key.includes(`/PYQs/${exam}/`) && key.includes(`/${pathPart}/questions.json`)
+    (key) =>
+      key.includes(`/PYQs/${exam}/`) &&
+      key.includes(`/${subjectId}/questions.json`)
   );
-  return key ? parseQuestions(questionModules[key]) : [];
+
+  return key
+    ? parseQuestions(questionModules[key], exam, subjectId)
+    : [];
 }
 
-export function loadExplanations(exam: Exam, subjectId: string): PYQExplanation[] {
+export function loadExplanations(
+  exam: Exam,
+  subjectId: string
+): PYQExplanation[] {
   const key = Object.keys(explanationModules).find(
-    (key) => key.includes(`/PYQs/${exam}/`) && key.includes(`/${subjectId}/explanations.json`)
+    (key) =>
+      key.includes(`/PYQs/${exam}/`) &&
+      key.includes(`/${subjectId}/explanations.json`)
   );
+
   return key ? parseExplanations(explanationModules[key]) : [];
 }
 
 export function getAllQuestions(exam: Exam): PYQQuestion[] {
   return Object.entries(questionModules)
     .filter(([key]) => key.includes(`/PYQs/${exam}/`))
-    .flatMap(([, raw]) => parseQuestions(raw));
-    }
+    .flatMap(([key, raw]) => {
+      const subjectId =
+        key.match(/\/PYQs\/[^/]+\/([^/]+)\/questions\.json$/)?.[1] ?? "";
+
+      return parseQuestions(raw, exam, subjectId);
+    });
+}
