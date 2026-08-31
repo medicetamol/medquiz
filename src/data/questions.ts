@@ -62,7 +62,7 @@ export function loadQuestions(
 ): PYQQuestion[] {
   const key = Object.keys(questionModules).find(
     (key) =>
-      key.includes(`/PYQs/${exam}/`) &&
+      key.includes(`PYQs/${exam}/`) &&
       key.includes(`/${subjectId}/questions.json`)
   );
 
@@ -77,19 +77,21 @@ export function loadExplanations(
 ): PYQExplanation[] {
   const key = Object.keys(explanationModules).find(
     (key) =>
-      key.includes(`/PYQs/${exam}/`) &&
+      key.includes(`PYQs/${exam}/`) &&
       key.includes(`/${subjectId}/explanations.json`)
   );
 
-  return key ? parseExplanations(explanationModules[key]) : [];
+  return key
+    ? parseExplanations(explanationModules[key])
+    : [];
 }
 
 export function getAllQuestions(exam: Exam): PYQQuestion[] {
   return Object.entries(questionModules)
-    .filter(([key]) => key.includes(`/PYQs/${exam}/`))
+    .filter(([key]) => key.includes(`PYQs/${exam}/`))
     .flatMap(([key, raw]) => {
       const subjectId =
-        key.match(/\/PYQs\/[^/]+\/([^/]+)\/questions\.json$/)?.[1] ?? "";
+        key.match(/PYQs\/[^/]+\/([^/]+)\/questions\.json$/)?.[1] ?? "";
 
       return parseQuestions(raw, exam, subjectId);
     });
