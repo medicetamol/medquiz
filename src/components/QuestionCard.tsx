@@ -36,7 +36,7 @@ export default function QuestionCard({
           // Only an unanswered timeout uses the subdued correct-answer treatment.
           const correctClass =
             timedOut && selected === null
-              ? "border-slate-600 bg-slate-800/70 text-slate-300"
+              ? "border-sky-700/70 bg-sky-950/40 text-sky-200"
               : "border-emerald-500/70 bg-emerald-500/10 text-emerald-100";
 
           const wrongClass = "border-red-500/70 bg-red-500/10 text-red-100";
