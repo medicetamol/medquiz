@@ -26,11 +26,6 @@ export default function Result() {
           <Stat label="Accuracy" value={`${accuracy}%`} />
         </div>
 
-        {state?.custom && (
-          <p className="mt-5 rounded-xl border border-slate-800 bg-slate-950 p-3 text-xs leading-5 text-slate-500">
-            Custom module attempt. Correct/incorrect QBank statistics were not changed.
-          </p>
-        )}
 
         <div className="mt-7 flex gap-2">
           <Link to={`/pyqs/${exam}`} className="flex-1 rounded-xl bg-slate-100 px-4 py-3 text-center text-sm font-bold text-slate-950">
