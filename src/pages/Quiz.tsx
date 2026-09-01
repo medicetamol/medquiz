@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronLeft, ChevronRight, ClipboardCheck, Clock, Pause, Play } from "lucide-react";
+import { ArrowLeft, ChevronRight, ClipboardCheck, Clock, Pause, Play } from "lucide-react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getAllQuestions, loadExplanations } from "../data/questions";
 import { getQuestionProgress, recordDirectAnswer, saveQuizResult, toggleBookmark } from "../lib/db";
@@ -13,7 +13,6 @@ function shuffle<T>(items: T[]): T[] {
 const SECONDS_PER_QUESTION = 60;
 const HALF_TIME = 30;
 const LAST_TEN_SECONDS = 10;
-const DOUBLE_TAP_WINDOW = 320;
 
 export default function Quiz() {
   const { exam, subjectId } = useParams();
@@ -51,7 +50,6 @@ export default function Quiz() {
   const selectedRef = useRef<number | null>(null);
   const answersRef = useRef<QuizAnswer[]>([]);
   const submittedRef = useRef(false);
-  const tapTimerRef = useRef<number | null>(null);
   const feedbackTimerRef = useRef<number | null>(null);
 
   const question = pool[index];
@@ -69,18 +67,16 @@ export default function Quiz() {
 
   useEffect(() => {
     return () => {
-      if (tapTimerRef.current !== null) window.clearTimeout(tapTimerRef.current);
       if (feedbackTimerRef.current !== null) window.clearTimeout(feedbackTimerRef.current);
     };
   }, []);
 
-  // Exam mode: browser back is blocked while the quiz is active.
+  // Prevent browser back while the quiz is active. There is no Exit control during the quiz.
   useEffect(() => {
     if (!question) return;
 
     const state = { mediCetamolQuiz: true };
     window.history.pushState(state, "", window.location.href);
-
     const blockBack = () => window.history.pushState(state, "", window.location.href);
     window.addEventListener("popstate", blockBack);
     return () => window.removeEventListener("popstate", blockBack);
@@ -91,19 +87,25 @@ export default function Quiz() {
 
     getQuestionProgress(question.id).then((p) => setBookmarked(Boolean(p?.bookmarked)));
 
-    selectedRef.current = null;
-    submittedRef.current = false;
-    setSelected(null);
-    setSubmitted(false);
-    setTimedOut(false);
+    // Restore a previously submitted response when moving back to a question.
+    const previousAnswer = answersRef.current.find((a) => a.qid === question.id);
+    const restoredSelection = previousAnswer?.selected ?? null;
+
+    selectedRef.current = restoredSelection;
+    submittedRef.current = Boolean(previousAnswer);
+
+    setSelected(restoredSelection);
+    setSubmitted(Boolean(previousAnswer));
+    setTimedOut(Boolean(previousAnswer && previousAnswer.selected === null));
     setSecondsLeft(SECONDS_PER_QUESTION);
+    setTimerEnabled(true);
     setFeedback("");
   }, [question?.id]);
 
   const showFeedback = (message: string) => {
     if (feedbackTimerRef.current !== null) window.clearTimeout(feedbackTimerRef.current);
     setFeedback(message);
-    feedbackTimerRef.current = window.setTimeout(() => setFeedback(""), 1400);
+    feedbackTimerRef.current = window.setTimeout(() => setFeedback(""), 1200);
   };
 
   async function submitCurrent(choice: number | null = selectedRef.current, timeout = false) {
@@ -119,7 +121,7 @@ export default function Quiz() {
     submittedRef.current = true;
     setAnswers(nextAnswers);
     setSubmitted(true);
-    setTimedOut(timeout);
+    setTimedOut(timeout && choice === null);
 
     if (timeout) {
       setSecondsLeft(0);
@@ -133,6 +135,7 @@ export default function Quiz() {
     }
   }
 
+  // Timer runs only for an unanswered active question. Pause remains INSIDE the timer control.
   useEffect(() => {
     if (!timerEnabled || submitted || !question) return;
 
@@ -197,36 +200,22 @@ export default function Quiz() {
     setIndex((i) => i - 1);
   };
 
-  const handleSubmitTap = () => {
+  // Submit rules:
+  // - selected response: single tap submits at any time
+  // - no response and <=30 sec remaining: single tap submits unanswered
+  // - no response and >30 sec remaining: single tap gives temporary feedback only
+  const handleSubmit = () => {
     if (submittedRef.current || !timerEnabled) return;
 
-    // Before half-time, a tap only gives feedback. Never submit on a single tap.
-    if (tapTimerRef.current !== null) window.clearTimeout(tapTimerRef.current);
+    const hasSelection = selectedRef.current !== null;
+    const halfTimeReached = secondsLeft <= HALF_TIME;
 
-    tapTimerRef.current = window.setTimeout(() => {
-      tapTimerRef.current = null;
-      showFeedback(
-        secondsLeft > HALF_TIME
-          ? "Double tap Submit after half-time"
-          : "Double tap to submit"
-      );
-    }, DOUBLE_TAP_WINDOW);
-  };
-
-  const handleSubmitDoubleTap = () => {
-    if (tapTimerRef.current !== null) {
-      window.clearTimeout(tapTimerRef.current);
-      tapTimerRef.current = null;
-    }
-
-    if (submittedRef.current || !timerEnabled) return;
-
-    if (secondsLeft > HALF_TIME) {
-      showFeedback("Submit available after half-time");
+    if (hasSelection || halfTimeReached) {
+      void submitCurrent(selectedRef.current);
       return;
     }
 
-    void submitCurrent(selectedRef.current);
+    showFeedback("Submit available after half-time");
   };
 
   const handleOptionSelect = (choice: number) => {
@@ -235,13 +224,11 @@ export default function Quiz() {
     if (selectedRef.current === choice) {
       selectedRef.current = null;
       setSelected(null);
-      showFeedback("Response cleared");
       return;
     }
 
     selectedRef.current = choice;
     setSelected(choice);
-    setFeedback("");
   };
 
   const bookmark = async () => {
@@ -255,36 +242,63 @@ export default function Quiz() {
   const timerProgress = (secondsLeft / SECONDS_PER_QUESTION) * 100;
   const danger = secondsLeft <= LAST_TEN_SECONDS && !submitted;
 
-  return (
-    <main className="relative mx-auto min-h-screen max-w-4xl px-2 pb-24 pt-1 sm:px-3 sm:pt-2">
-      {/* Timer stays in the original compact control; pause is INSIDE it. */}
-      <div className="mb-2 flex items-center justify-end gap-2">
-        <button
-          type="button"
-          onClick={() => setTimerEnabled((v) => !v)}
-          disabled={submitted}
-          className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-medium hover:bg-slate-900 disabled:opacity-30 ${
-            danger
-              ? "border-red-900/70 bg-red-950/30 text-red-400"
-              : "border-slate-800 text-slate-400"
-          }`}
-          aria-label={timerEnabled ? "Pause timer" : "Resume timer"}
-        >
-          {timerEnabled ? <Pause size={13} /> : <Play size={13} />}
-          {mm}:{ss}
-        </button>
-        <span className="text-xs text-slate-500">{index + 1}/{pool.length}</span>
-      </div>
+  // Muted neutral controls: selection does not recolour or fade the Submit button.
+  const actionClass =
+    "rounded-xl border border-slate-700 bg-slate-800 px-4 py-3.5 text-sm font-semibold text-slate-200 hover:bg-slate-750";
 
-      {/* Timer bar directly below the header/timer area. */}
-      <div className={`mb-2 h-1 overflow-hidden rounded-full ${danger ? "bg-red-950/70" : "bg-slate-900"}`}>
+  return (
+    <main className="relative mx-auto min-h-screen w-full max-w-4xl px-1 pb-24 pt-1 sm:px-2 sm:pt-2">
+      {/* 1. Progress/timer bar is the first element below the app header. */}
+      <div
+        className={`mb-2 h-1 overflow-hidden rounded-full ${danger ? "bg-red-950/70" : "bg-slate-900"}`}
+        aria-label={`Time remaining ${mm}:${ss}`}
+      >
         <div
-          className={`h-full transition-[width] duration-1000 ease-linear ${danger ? "bg-red-500" : "bg-slate-400"}`}
+          className={`h-full transition-[width] duration-1000 ease-linear ${danger ? "bg-red-500" : "bg-slate-500"}`}
           style={{ width: `${timerProgress}%` }}
         />
       </div>
 
-      {/* The question itself gets the maximum available width. */}
+      {/* 2. While solving, ONLY question number + timer/pause + bookmark are shown. */}
+      <div className="mb-2 flex items-center justify-between gap-2 px-1">
+        <span className="text-xs font-medium text-slate-500">
+          {index + 1}/{pool.length}
+        </span>
+
+        <div className="flex items-center gap-2">
+          <div
+            className={`inline-flex items-center overflow-hidden rounded-lg border ${
+              danger
+                ? "border-red-900/70 bg-red-950/30 text-red-400"
+                : "border-slate-800 text-slate-400"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => setTimerEnabled((v) => !v)}
+              disabled={submitted}
+              className="flex min-h-10 items-center px-2.5 py-2 disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label={timerEnabled ? "Pause timer" : "Resume timer"}
+            >
+              {timerEnabled ? <Pause size={13} /> : <Play size={13} />}
+            </button>
+            <span className="border-l border-slate-800 px-2.5 py-2 text-xs font-medium">
+              {mm}:{ss}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={bookmark}
+            className="rounded-lg p-2 text-slate-500 hover:text-slate-200"
+            aria-label={bookmarked ? "Remove bookmark" : "Bookmark"}
+          >
+            <span className="text-base leading-none">{bookmarked ? "🔖" : "🔖"}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* QuestionCard contains only the question/options while active. */}
       <QuestionCard
         question={question}
         explanation={explanation}
@@ -296,9 +310,9 @@ export default function Quiz() {
         onBookmark={bookmark}
       />
 
-      {/* Temporary feedback only. No permanent disclaimer. */}
+      {/* Temporary feedback only; never a permanent disclaimer. */}
       <div
-        className={`pointer-events-none fixed bottom-[5.25rem] left-1/2 z-40 -translate-x-1/2 rounded-lg border border-slate-800 bg-slate-950/95 px-3 py-2 text-xs text-slate-300 shadow-lg transition-opacity ${
+        className={`pointer-events-none fixed bottom-[5.25rem] left-1/2 z-40 -translate-x-1/2 rounded-lg border border-slate-700 bg-slate-900/95 px-3 py-2 text-xs text-slate-200 shadow-lg transition-opacity ${
           feedback ? "opacity-100" : "opacity-0"
         }`}
         aria-live="polite"
@@ -306,19 +320,15 @@ export default function Quiz() {
         {feedback}
       </div>
 
-      {/* Fixed navigation at the bottom of the viewport. */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-900 bg-[#080b10]/95 px-2 py-2 backdrop-blur sm:px-3">
+      {/* Fixed bottom navigation. */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-900 bg-[#080b10]/95 px-1.5 py-2 backdrop-blur sm:px-2">
         <div className="mx-auto flex max-w-4xl items-stretch gap-2">
           {!submitted ? (
             <button
               type="button"
-              onClick={handleSubmitTap}
-              onDoubleClick={handleSubmitDoubleTap}
-              disabled={!timerEnabled}
-              className={`w-full rounded-xl bg-slate-100 px-4 py-3.5 text-sm font-bold text-slate-950 transition-opacity disabled:cursor-not-allowed disabled:opacity-25 ${
-                selected !== null ? "opacity-100" : "opacity-40"
-              }`}
-              aria-label="Double tap to submit current question"
+              onClick={handleSubmit}
+              disabled={!timerEnabled || (selected === null && secondsLeft > HALF_TIME)}
+              className={`w-full ${actionClass} disabled:cursor-not-allowed disabled:opacity-100`}
             >
               SUBMIT
             </button>
@@ -328,17 +338,13 @@ export default function Quiz() {
                 type="button"
                 onClick={previous}
                 disabled={index === 0}
-                className="w-16 shrink-0 rounded-xl bg-slate-100 px-3 py-3.5 text-slate-950 disabled:opacity-25"
+                className={`w-16 shrink-0 ${actionClass} px-3 disabled:cursor-not-allowed`}
                 aria-label="Previous question"
               >
                 <ArrowLeft className="mx-auto" size={20} />
               </button>
 
-              <button
-                type="button"
-                onClick={next}
-                className="flex-1 rounded-xl bg-slate-100 px-4 py-3.5 text-sm font-bold text-slate-950"
-              >
+              <button type="button" onClick={next} className={`flex-1 ${actionClass}`}>
                 <span className="flex items-center justify-center gap-2">
                   NEXT
                   <ChevronRight size={18} />
@@ -348,10 +354,10 @@ export default function Quiz() {
               <button
                 type="button"
                 onClick={() => void finish()}
-                className="w-16 shrink-0 rounded-xl bg-slate-100 px-3 py-3.5 text-slate-950"
+                className={`w-16 shrink-0 ${actionClass} px-3`}
                 aria-label="Final submit"
               >
-                <ClipboardCheck className="mx-auto" size={23} strokeWidth={2.2} />
+                <ClipboardCheck className="mx-auto" size={23} strokeWidth={2.1} />
               </button>
             </>
           ) : (
@@ -359,7 +365,7 @@ export default function Quiz() {
               <button
                 type="button"
                 onClick={previous}
-                className="w-16 shrink-0 rounded-xl bg-slate-100 px-3 py-3.5 text-slate-950"
+                className={`w-16 shrink-0 ${actionClass} px-3`}
                 aria-label="Previous question"
               >
                 <ArrowLeft className="mx-auto" size={20} />
@@ -368,11 +374,11 @@ export default function Quiz() {
               <button
                 type="button"
                 onClick={() => void finish()}
-                className="flex-1 rounded-xl bg-slate-100 px-4 py-3.5 text-sm font-bold text-slate-950"
+                className={`flex-1 ${actionClass}`}
                 aria-label="Final submit"
               >
                 <span className="flex items-center justify-center gap-2">
-                  <ClipboardCheck size={22} strokeWidth={2.2} />
+                  <ClipboardCheck size={22} strokeWidth={2.1} />
                   FINAL SUBMIT
                 </span>
               </button>
