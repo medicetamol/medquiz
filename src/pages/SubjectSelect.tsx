@@ -1,13 +1,13 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
-import { SUBJECTS, EXAMS, getSubject } from "../constants";
+import { SUBJECTS, EXAMS } from "../constants";
 import { getAllQuestions } from "../data/questions";
 import EmptyState from "../components/EmptyState";
 
 export default function SubjectSelect() {
-  const { exam } = useParams();
-  const currentExam = EXAMS.find((x) => x.id === exam);
-  const examId = exam as "NEET-PG" | "INI-CET" | "FMGE";
+  const { exam } = useParams<{ exam: "NEET-PG" | "INI-CET" | "FMGE" }>();
+  const examId = exam && EXAMS.some((x) => x.id === exam) ? exam : "NEET-PG";
+  const currentExam = EXAMS.find((x) => x.id === examId);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -26,7 +26,7 @@ export default function SubjectSelect() {
           return (
             <Link
               key={subject.id}
-              to={`/pyqs/${exam}/${subject.id}`}
+              to={`/pyqs/${examId}/${subject.id}`}
               className="group min-h-28 rounded-2xl border border-slate-800 bg-slate-900/50 p-4 hover:border-slate-600"
             >
               <div className="flex h-full flex-col justify-between">
@@ -50,11 +50,6 @@ export default function SubjectSelect() {
         </Link>
       </div>
 
-      <div className="mt-7">
-        <p className="text-xs text-slate-600">
-          {getSubject("anatomy")?.name} currently contains the starter sample. The remaining subject databases are intentionally empty.
-        </p>
-      </div>
     </main>
   );
 }
