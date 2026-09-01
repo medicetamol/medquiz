@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight, ClipboardCheck, Clock, Pause, Play } from "lucide-react";
+import { ArrowLeft, Bookmark, ChevronRight, ClipboardCheck, Clock, Pause, Play } from "lucide-react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getAllQuestions, loadExplanations } from "../data/questions";
 import { getQuestionProgress, recordDirectAnswer, saveQuizResult, toggleBookmark } from "../lib/db";
@@ -45,6 +45,7 @@ export default function Quiz() {
   const [timerEnabled, setTimerEnabled] = useState(true);
   const [secondsLeft, setSecondsLeft] = useState(SECONDS_PER_QUESTION);
   const [feedback, setFeedback] = useState("");
+  const [showFinalConfirm, setShowFinalConfirm] = useState(false);
   const [startedAt] = useState(new Date().toISOString());
 
   const selectedRef = useRef<number | null>(null);
@@ -125,9 +126,6 @@ export default function Quiz() {
 
     if (timeout) {
       setSecondsLeft(0);
-      showFeedback("Time over");
-    } else {
-      showFeedback(correct ? "Correct" : "Incorrect");
     }
 
     if (mode === "direct") {
@@ -168,8 +166,12 @@ export default function Quiz() {
     );
   }
 
+  const requestFinalSubmit = () => {
+    setShowFinalConfirm(true);
+  };
+
   const finish = async () => {
-    showFeedback("Final submission");
+    setShowFinalConfirm(false);
 
     await saveQuizResult({
       exam: examId,
@@ -215,7 +217,7 @@ export default function Quiz() {
       return;
     }
 
-    showFeedback("Submit available after half-time");
+    showFeedback("Wait for 30s to skip");
   };
 
   const handleOptionSelect = (choice: number) => {
@@ -290,10 +292,14 @@ export default function Quiz() {
           <button
             type="button"
             onClick={bookmark}
-            className="rounded-lg p-2 text-slate-500 hover:text-slate-200"
+            className="rounded-lg p-2 text-slate-500 transition-colors hover:text-slate-200"
             aria-label={bookmarked ? "Remove bookmark" : "Bookmark"}
           >
-            <span className="text-base leading-none">{bookmarked ? "🔖" : "🔖"}</span>
+            <Bookmark
+              size={21}
+              strokeWidth={1.8}
+              fill={bookmarked ? "currentColor" : "none"}
+            />
           </button>
         </div>
       </div>
@@ -319,6 +325,38 @@ export default function Quiz() {
       >
         {feedback}
       </div>
+
+      {showFinalConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="final-submit-title"
+        >
+          <div className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-5 shadow-2xl">
+            <h2 id="final-submit-title" className="text-center text-lg font-semibold text-slate-100">
+              Are you sure?
+            </h2>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={finish}
+                className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-100"
+              >
+                Yes
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowFinalConfirm(false)}
+                className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-100"
+              >
+                Go Back
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Fixed bottom navigation. */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-900 bg-[#080b10]/95 px-1.5 py-2 backdrop-blur sm:px-2">
@@ -353,7 +391,7 @@ export default function Quiz() {
 
               <button
                 type="button"
-                onClick={() => void finish()}
+                onClick={requestFinalSubmit}
                 className={`w-16 shrink-0 ${actionClass} px-3`}
                 aria-label="Final submit"
               >
@@ -373,7 +411,7 @@ export default function Quiz() {
 
               <button
                 type="button"
-                onClick={() => void finish()}
+                onClick={requestFinalSubmit}
                 className={`flex-1 ${actionClass}`}
                 aria-label="Final submit"
               >
