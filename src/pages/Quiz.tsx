@@ -160,6 +160,14 @@ export default function Quiz() {
     setIndex((i) => i + 1);
   };
 
+  const goNextCustom = async () => {
+    if (!question || selected === null || index >= pool.length - 1) return;
+    if (!submitted) {
+      await submitCurrent();
+    }
+    setIndex((i) => i + 1);
+  };
+
   const handleFinalSubmit = () => {
     const now = Date.now();
     if (now - lastSubmitTap < 500) {
@@ -219,26 +227,47 @@ export default function Quiz() {
         minimalBeforeSubmit={mode === "custom"}
       />
 
-      <div className="mt-4 flex items-center gap-2">
-        <button
-          type="button"
-          disabled={index === 0}
-          onClick={goPrevious}
-          className="rounded-xl border border-slate-800 p-3 text-slate-400 disabled:opacity-25"
-          aria-label="Previous question"
-        >
-          <ChevronLeft size={18} />
-        </button>
+      {mode === "custom" ? (
+        <div className="mt-4 flex items-center gap-2">
+          <button
+            type="button"
+            disabled={index === 0}
+            onClick={goPrevious}
+            className="shrink-0 rounded-xl border border-slate-800 p-3 text-slate-400 disabled:opacity-25"
+            aria-label="Previous question"
+          >
+            <ChevronLeft size={18} />
+          </button>
 
-        {mode === "custom" ? (
+          <button
+            type="button"
+            disabled={selected === null || index === pool.length - 1}
+            onClick={() => void goNextCustom()}
+            className="flex-1 rounded-xl bg-slate-100 px-4 py-3 text-sm font-bold text-slate-950 disabled:opacity-30"
+          >
+            NEXT
+          </button>
+
           <button
             type="button"
             onClick={handleFinalSubmit}
-            className="flex-1 rounded-xl bg-slate-100 px-4 py-3 text-sm font-bold text-slate-950"
+            className="shrink-0 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-xs font-bold text-slate-200"
           >
             SUBMIT
           </button>
-        ) : (
+        </div>
+      ) : (
+        <div className="mt-4 flex items-center gap-2">
+          <button
+            type="button"
+            disabled={index === 0}
+            onClick={goPrevious}
+            className="rounded-xl border border-slate-800 p-3 text-slate-400 disabled:opacity-25"
+            aria-label="Previous question"
+          >
+            <ChevronLeft size={18} />
+          </button>
+
           <button
             type="button"
             disabled={selected === null || submitted}
@@ -247,19 +276,7 @@ export default function Quiz() {
           >
             SUBMIT
           </button>
-        )}
 
-        {mode === "custom" ? (
-          <button
-            type="button"
-            disabled={!submitted || index === pool.length - 1}
-            onClick={goNext}
-            className="rounded-xl border border-slate-800 p-3 text-slate-400 disabled:opacity-25"
-            aria-label="Next question"
-          >
-            {index === pool.length - 1 ? <Flag size={18} /> : <ChevronRight size={18} />}
-          </button>
-        ) : (
           <button
             type="button"
             disabled={!submitted}
@@ -272,8 +289,8 @@ export default function Quiz() {
           >
             {index === pool.length - 1 ? <Flag size={18} /> : <ChevronRight size={18} />}
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {finishNotice && (
         <div className="mt-3 text-center text-xs text-slate-500">Double-tap SUBMIT to finish the module.</div>
