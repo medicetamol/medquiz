@@ -83,6 +83,10 @@ export default function Progress() {
         <Metric icon={Flame} label="Streak" value={`${streak}d`} />
       </div>
 
+      <div className="mt-5 rounded-xl border border-slate-800 bg-slate-950/70 p-4 text-xs leading-5 text-slate-500">
+        Answer recorded — custom modules do not alter correctness statistics.
+      </div>
+
       <section className="mt-5 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
         <div className="flex items-center justify-between">
           <div>
