@@ -1,8 +1,11 @@
 import {
+  ArrowLeft,
   Check,
-  ClipboardCheck,
-  Clock,
   ChevronRight,
+  ClipboardCheck,
+  Pause,
+  Play,
+  Clock,
 } from "lucide-react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getAllQuestions, loadExplanations } from "../data/questions";
@@ -21,13 +24,14 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 const SECONDS_PER_QUESTION = 60;
-const HALF_TIME = SECONDS_PER_QUESTION / 2;
+const HALF_TIME = 30;
 const LAST_TEN_SECONDS = 10;
 
 export default function Quiz() {
   const { exam, subjectId } = useParams();
   const [search] = useSearchParams();
   const navigate = useNavigate();
+
   const examId = exam as Exam;
   const mode = search.get("mode") === "custom" ? "custom" : "direct";
   const ids = (search.get("ids") ?? "").split(",").filter(Boolean);
@@ -40,6 +44,7 @@ export default function Quiz() {
       questions = questions.filter((q) => ids.includes(q.id));
     } else if (subjectId && subjectId !== "custom") {
       questions = questions.filter((q) => q.subjectId === subjectId);
+
       if (topic !== "all") {
         questions = questions.filter((q) => q.topicId === topic);
       }
@@ -51,16 +56,21 @@ export default function Quiz() {
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
   const [answers, setAnswers] = useState<QuizAnswer[]>([]);
   const [bookmarked, setBookmarked] = useState(false);
+
   const [secondsLeft, setSecondsLeft] = useState(SECONDS_PER_QUESTION);
+  const [paused, setPaused] = useState(false);
   const [feedback, setFeedback] = useState("");
+  const [examFinished, setExamFinished] = useState(false);
+
   const [startedAt] = useState(new Date().toISOString());
 
-  // Refs keep the timer callback synchronized with the latest answer state.
   const selectedRef = useRef<number | null>(null);
   const answersRef = useRef<QuizAnswer[]>([]);
   const submittedRef = useRef(false);
+  const pausedRef = useRef(false);
 
   const question = pool[index];
 
@@ -82,51 +92,63 @@ export default function Quiz() {
     submittedRef.current = submitted;
   }, [submitted]);
 
-  // Keep the quiz in an exam-like mode: no in-app exit/back action and
-  // browser back does not leave the active quiz accidentally.
   useEffect(() => {
-    if (!question) return;
+    pausedRef.current = paused;
+  }, [paused]);
 
-    const state = { mediquiz: true };
+  /*
+   * EXAM MODE
+   * Back navigation is blocked while the exam is active.
+   * Once FINAL SUBMIT completes the exam, normal navigation is restored.
+   */
+  useEffect(() => {
+    if (!question || examFinished) return;
+
+    const state = { mediCetamolQuiz: true };
     window.history.pushState(state, "", window.location.href);
 
-    const preventBack = () => {
+    const blockBack = () => {
       window.history.pushState(state, "", window.location.href);
     };
 
-    window.addEventListener("popstate", preventBack);
+    window.addEventListener("popstate", blockBack);
 
-    return () => {
-      window.removeEventListener("popstate", preventBack);
-    };
-  }, [question?.id]);
+    return () => window.removeEventListener("popstate", blockBack);
+  }, [question?.id, examFinished]);
 
   useEffect(() => {
     if (!question) return;
 
-    getQuestionProgress(question.id).then((p) =>
-      setBookmarked(Boolean(p?.bookmarked))
-    );
+    getQuestionProgress(question.id).then((p) => {
+      setBookmarked(Boolean(p?.bookmarked));
+    });
 
     selectedRef.current = null;
     submittedRef.current = false;
 
     setSelected(null);
     setSubmitted(false);
-    setFeedback("");
+    setTimedOut(false);
     setSecondsLeft(SECONDS_PER_QUESTION);
+    setPaused(false);
+    setFeedback("");
   }, [question?.id]);
 
   async function submitCurrent(
     choice: number | null = selectedRef.current,
-    timedOut = false
+    timeout = false
   ) {
     if (submittedRef.current || !question) return;
 
     const correct = choice !== null && choice === question.answer;
-    const nextAnswers = [
+
+    const nextAnswers: QuizAnswer[] = [
       ...answersRef.current,
-      { qid: question.id, selected: choice, correct },
+      {
+        qid: question.id,
+        selected: choice,
+        correct,
+      },
     ];
 
     answersRef.current = nextAnswers;
@@ -134,20 +156,17 @@ export default function Quiz() {
 
     setAnswers(nextAnswers);
     setSubmitted(true);
+    setTimedOut(timeout);
     setFeedback("");
 
     if (mode === "direct") {
       await recordDirectAnswer(question.id, correct);
     }
-
-    if (timedOut) {
-      setSecondsLeft(0);
-    }
   }
 
-  // One fixed 60-second countdown for every question.
+  // Timer pauses only through the explicit Pause button.
   useEffect(() => {
-    if (!question || submitted) return;
+    if (!question || submitted || paused || examFinished) return;
 
     const timer = window.setInterval(() => {
       setSecondsLeft((value) => {
@@ -162,7 +181,7 @@ export default function Quiz() {
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [question?.id, submitted]);
+  }, [question?.id, submitted, paused, examFinished]);
 
   if (!pool.length) {
     return (
@@ -181,82 +200,132 @@ export default function Quiz() {
     );
   }
 
-  const finish = async (finalAnswers = answersRef.current) => {
+  const finishExam = async () => {
     await saveQuizResult({
       exam: examId,
       questionIds: pool.map((q) => q.id),
-      answers: finalAnswers,
+      answers: answersRef.current,
       customModule: mode === "custom",
       startedAt,
       finishedAt: new Date().toISOString(),
     });
 
+    setExamFinished(true);
+
     navigate(`/result/${examId}`, {
       state: {
         total: pool.length,
-        answers: finalAnswers,
+        answers: answersRef.current,
         custom: mode === "custom",
+        examFinished: true,
       },
     });
   };
 
-  const next = async () => {
+  const goNext = () => {
     if (!submittedRef.current) return;
 
-    if (index === pool.length - 1) {
-      await finish(answersRef.current);
-    } else {
-      setIndex((i) => i + 1);
+    if (index < pool.length - 1) {
+      setIndex((value) => value + 1);
     }
   };
 
-  const handleSubmitClick = () => {
+  const goPrevious = () => {
+    if (!submittedRef.current || index <= 0) return;
+
+    setIndex((value) => value - 1);
+  };
+
+  /*
+   * Single tap before half-time:
+   * feedback only.
+   *
+   * Double tap after half-time:
+   * submit the current response.
+   */
+  const handleSubmitTap = () => {
     if (submittedRef.current) return;
 
-    // Before half-time, do not submit. Give a small, non-disruptive cue.
-    if (secondsLeft > HALF_TIME) {
-      setFeedback("Submit becomes available after half the time.");
-      window.setTimeout(() => setFeedback(""), 1800);
+    setFeedback(
+      secondsLeft > HALF_TIME
+        ? "Double tap Submit after half-time to submit."
+        : "Double tap Submit to confirm."
+    );
+
+    window.setTimeout(() => setFeedback(""), 1500);
+  };
+
+  const handleSubmitDoubleTap = () => {
+    if (submittedRef.current || secondsLeft > HALF_TIME) return;
+
+    void submitCurrent(selectedRef.current);
+  };
+
+  const handleOptionSelect = (choice: number) => {
+    if (submittedRef.current) return;
+
+    if (selectedRef.current === choice) {
+      selectedRef.current = null;
+      setSelected(null);
+      setFeedback("Response cleared");
+      window.setTimeout(() => setFeedback(""), 1000);
       return;
     }
 
-    void submitCurrent();
-  };
-
-  const handleSubmitDoubleClick = () => {
-    // Double-tap/double-click is also accepted after half-time.
-    if (!submittedRef.current && secondsLeft <= HALF_TIME) {
-      void submitCurrent();
-    }
+    selectedRef.current = choice;
+    setSelected(choice);
+    setFeedback("");
   };
 
   const bookmark = async () => {
     if (!question) return;
-    const nextBookmark = await toggleBookmark(question.id);
-    setBookmarked(nextBookmark.bookmarked);
+
+    const result = await toggleBookmark(question.id);
+    setBookmarked(result.bookmarked);
   };
 
   const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
   const ss = String(secondsLeft % 60).padStart(2, "0");
 
-  // The thin line now represents the current question's remaining time.
-  const timerProgress = Math.max(
-    0,
-    Math.min(100, (secondsLeft / SECONDS_PER_QUESTION) * 100)
-  );
-  const danger = secondsLeft <= LAST_TEN_SECONDS && !submitted;
+  const timerProgress =
+    (secondsLeft / SECONDS_PER_QUESTION) * 100;
 
+  const danger =
+    secondsLeft <= LAST_TEN_SECONDS && !submitted;
+
+  /*
+   * Before submission:
+   *       [       SUBMIT       ]
+   *
+   * After normal submission:
+   *       [ < ] [ NEXT ] [ FINAL ]
+   *
+   * Last question after submission:
+   *       [ < ] [ FINAL SUBMIT ]
+   *
+   * If user goes back from the last question:
+   *       [ < ] [ NEXT ] [ FINAL ]
+   */
   return (
     <main className="mx-auto min-h-[calc(100vh-72px)] max-w-3xl select-none px-4 py-5 sm:py-8">
-      {/* Exam-mode header: no Exit and no pause/timer control. */}
       <div className="mb-4 flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onClick={() => setPaused((value) => !value)}
+          disabled={submitted || examFinished}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 px-3 py-2 text-xs font-medium text-slate-400 disabled:opacity-30"
+          aria-label={paused ? "Resume timer" : "Pause timer"}
+        >
+          {paused ? <Play size={14} /> : <Pause size={14} />}
+          {paused ? "RESUME" : "PAUSE"}
+        </button>
+
         <div
           className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium ${
             danger
               ? "border-red-900/70 bg-red-950/30 text-red-400"
               : "border-slate-800 text-slate-400"
           }`}
-          aria-label={`Time remaining ${mm}:${ss}`}
         >
           <Clock size={14} />
           {mm}:{ss}
@@ -265,21 +334,21 @@ export default function Quiz() {
         <span className="text-xs text-slate-500">
           {index + 1}/{pool.length}
         </span>
-
-        <span className="hidden text-xs text-slate-600 sm:inline">
-          {mode === "custom" ? "Custom" : "QBank"}
-        </span>
       </div>
 
-      {/* Current-question timer line. Last 10 seconds turn red. */}
+      {paused && !submitted && (
+        <div className="mb-3 rounded-lg border border-slate-800 px-3 py-2 text-center text-xs text-slate-500">
+          Quiz paused
+        </div>
+      )}
+
       <div
         className={`mb-4 h-1.5 overflow-hidden rounded-full ${
           danger ? "bg-red-950/60" : "bg-slate-900"
         }`}
-        aria-label="Question time remaining"
       >
         <div
-          className={`h-full transition-all duration-1000 ${
+          className={`h-full transition-[width] duration-1000 ease-linear ${
             danger ? "bg-red-500" : "bg-slate-400"
           }`}
           style={{ width: `${timerProgress}%` }}
@@ -291,65 +360,91 @@ export default function Quiz() {
         explanation={explanation}
         selected={selected}
         submitted={submitted}
+        timedOut={timedOut}
         bookmarked={bookmarked}
-        onSelect={(choice) => {
-          if (submittedRef.current) return;
-          setSelected(choice);
-          selectedRef.current = choice;
-          setFeedback("");
-        }}
+        onSelect={handleOptionSelect}
         onBookmark={bookmark}
       />
 
-      {/* Small feedback for an early submit attempt. */}
       <div className="mt-3 min-h-5 text-center text-xs text-slate-500">
         {feedback}
       </div>
 
-      <div className="mt-2 flex items-center gap-2">
-        {/* Back/previous question is intentionally removed in exam mode. */}
+      {!submitted ? (
+        <button
+          type="button"
+          onClick={handleSubmitTap}
+          onDoubleClick={handleSubmitDoubleTap}
+          disabled={paused}
+          className="mt-2 w-full rounded-xl bg-slate-100 px-4 py-4 text-sm font-bold text-slate-950 opacity-40 disabled:cursor-not-allowed disabled:opacity-20"
+          aria-label="Double tap to submit current question"
+        >
+          SUBMIT
+        </button>
+      ) : (
+        <div className="mt-2 flex items-stretch gap-2">
+          {index > 0 ? (
+            <button
+              type="button"
+              onClick={goPrevious}
+              className="w-16 rounded-xl bg-slate-100 px-3 py-4 text-slate-950"
+              aria-label="Previous question"
+            >
+              <ArrowLeft className="mx-auto" size={20} />
+            </button>
+          ) : (
+            <div className="w-16" />
+          )}
 
-        {!submitted ? (
-          <button
-            type="button"
-            disabled={selected === null}
-            onClick={handleSubmitClick}
-            onDoubleClick={handleSubmitDoubleClick}
-            className="flex-1 rounded-xl bg-slate-100 px-4 py-4 text-sm font-bold text-slate-950 opacity-45 transition-opacity disabled:cursor-not-allowed disabled:opacity-20"
-            aria-label="Submit answer for this question"
-          >
-            SUBMIT
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => void next()}
-            className="flex-1 rounded-xl bg-slate-100 px-4 py-4 text-sm font-bold text-slate-950"
-            aria-label={
-              index === pool.length - 1
-                ? "Submit complete exam"
-                : "Go to next question"
-            }
-          >
-            {index === pool.length - 1 ? (
-              <span className="flex items-center justify-center">
-                <ClipboardCheck size={24} strokeWidth={2.2} />
-              </span>
-            ) : (
-              <span className="flex items-center justify-center gap-2">
-                NEXT <ChevronRight size={18} />
-              </span>
-            )}
-          </button>
-        )}
-      </div>
+          {index < pool.length - 1 ? (
+            <>
+              <button
+                type="button"
+                onClick={goNext}
+                className="flex-1 rounded-xl bg-slate-100 px-4 py-4 text-sm font-bold text-slate-950"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  NEXT
+                  <ChevronRight size={18} />
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void finishExam()}
+                className="w-16 rounded-xl bg-slate-100 px-3 py-4 text-slate-950"
+                aria-label="Final submit"
+              >
+                <ClipboardCheck
+                  className="mx-auto"
+                  size={23}
+                  strokeWidth={2.2}
+                />
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => void finishExam()}
+                className="flex-1 rounded-xl bg-slate-100 px-4 py-4 text-sm font-bold text-slate-950"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <ClipboardCheck size={22} strokeWidth={2.2} />
+                  FINAL SUBMIT
+                </span>
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {submitted && (
         <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500">
           <Check size={14} />
-          Answer recorded
-          {mode === "custom" &&
-            " — custom modules do not alter correctness statistics"}
+          {timedOut && selected === null
+            ? "Time over — response unmarked"
+            : "Answer recorded"}
         </div>
       )}
     </main>
