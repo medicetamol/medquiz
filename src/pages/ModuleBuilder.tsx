@@ -82,7 +82,7 @@ export default function ModuleBuilder() {
   const [subjects, setSubjects] = useState<string[]>(["all"]);
   const [topics, setTopics] = useState<string[]>(["all"]);
   const [statuses, setStatuses] = useState<StatusFilter[]>(["all"]);
-  const [questionCount, setQuestionCount] = useState(40);
+  const [questionCount, setQuestionCount] = useState(20);
   const [subjectOpen, setSubjectOpen] = useState(false);
   const [topicOpen, setTopicOpen] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -189,6 +189,17 @@ export default function ModuleBuilder() {
     ? "All topics"
     : `${topics.length} topic${topics.length > 1 ? "s" : ""} selected`;
 
+  const subjectSummaryForMessage = subjects.includes("all")
+    ? "all subjects"
+    : (() => {
+        const names = subjects
+          .map((id) => SUBJECTS.find((s) => s.id === id)?.name)
+          .filter((name): name is string => Boolean(name));
+        if (names.length <= 1) return names[0] ?? "the selected subjects";
+        if (names.length === 2) return `${names[0]} and ${names[1]}`;
+        return `${names.slice(0, -1).join(", ")}, and ${names[names.length - 1]}`;
+      })();
+
   return (
     <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       <Link to={`/pyqs/${exam}`} className="mb-6 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-200">
@@ -222,27 +233,30 @@ export default function ModuleBuilder() {
         <FilterBar value={statuses} onChange={setStatuses} />
       </div>
 
-      <label className="mt-4 block rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-        <span className="block text-xs text-slate-500">Questions</span>
-        <select
-          value={questionCount}
-          onChange={(e) => setQuestionCount(Number(e.target.value))}
-          className="mt-2 w-full bg-transparent text-sm text-slate-100 outline-none"
-        >
-          {[10, 20, 30, 40, 50, 60, 80, 100].map((n) => <option key={n} value={n} className="bg-slate-900">{n}</option>)}
-        </select>
-      </label>
-
-      <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-sm text-slate-400">
-        {matchingCount} questions match the current filters.
-        {matchingCount < questionCount && matchingCount > 0 && ` The module will contain ${matchingCount}.`}
+      <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-sm leading-6 text-slate-400">
+        Creating a module for you with {Math.min(matchingCount, questionCount)} questions from {subjectSummaryForMessage}.
       </div>
 
       <div className="sticky bottom-3 mt-5">
         <div className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-[#10161e]/95 p-3 shadow-soft backdrop-blur">
-          <span className="flex-1 text-xs text-slate-500">
+          <label className="w-1/4 min-w-[78px] rounded-xl border border-slate-700 bg-slate-900 px-3 py-2">
+            <span className="block text-[10px] text-slate-500">Questions</span>
+            <select
+              value={questionCount}
+              onChange={(e) => setQuestionCount(Number(e.target.value))}
+              className="mt-0.5 w-full bg-transparent text-sm font-semibold text-slate-100 outline-none"
+              aria-label="Number of questions"
+            >
+              {[10, 20, 30, 40, 50, 60, 80, 100].map((n) => (
+                <option key={n} value={n} className="bg-slate-900">{n}</option>
+              ))}
+            </select>
+          </label>
+
+          <span className="flex-1 text-center text-xs text-slate-500">
             {matchingCount === 0 ? "No questions available" : `${Math.min(matchingCount, questionCount)} questions`}
           </span>
+
           <button
             type="button"
             disabled={matchingCount === 0 || creating}
