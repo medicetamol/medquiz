@@ -16,7 +16,6 @@ interface Props {
 
 export default function QuestionCard({
   question,
-  explanation,
   selected,
   submitted,
   timedOut = false,
@@ -128,20 +127,6 @@ export default function QuestionCard({
           </button>
         </div>
       </div>
-
-      {submitted && explanation && (
-        <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Explanation
-            </p>
-            {hasDetailedExplanation && (
-              <span className="text-[11px] text-slate-600">Detailed available</span>
-            )}
-          </div>
-          <p className="mt-2 text-sm leading-6 text-slate-300">{explanation.e}</p>
-        </div>
-      )}
     </section>
   );
 }
