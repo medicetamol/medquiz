@@ -93,23 +93,18 @@ export default function QuestionCard({
             </div>
           </div>
 
-          {explanation && (
-            <div className="mt-3 border-t border-slate-800 pt-4">
-              <div className="rounded-lg bg-slate-950/60 p-3">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Explanation
-                </p>
-                <p className="text-sm leading-6 text-slate-300">
-                  {explanation.explanation}
-                </p>
-                {explanation.keyPoint && (
-                  <p className="mt-3 border-l-2 border-slate-600 pl-3 text-sm font-medium text-slate-200">
-                    {explanation.keyPoint}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
+        {explanation && (
+  <div className="mt-3 border-t border-slate-800 pt-4">
+    <div className="rounded-lg bg-slate-950/60 p-3">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        Explanation
+      </p>
+      <p className="text-sm leading-6 text-slate-300">
+        {explanation.e}
+      </p>
+    </div>
+  </div>
+)}
         </>
       )}
     </section>
