@@ -12,6 +12,14 @@ const explanationModules = import.meta.glob("../../PYQs/*/*/explanations.json", 
   import: "default",
 }) as Record<string, string>;
 
+const detailedExplanationModules = import.meta.glob(
+  "../../PYQs/*/*/explanations/*.md",
+  {
+    query: "?raw",
+    import: "default",
+  }
+) as Record<string, () => Promise<string>>;
+
 type CompactQuestion = {
   id: string;
   y: number;
@@ -83,6 +91,43 @@ export function loadExplanations(
   return key
     ? parseExplanations(explanationModules[key])
     : [];
+}
+
+export function hasDetailedExplanation(
+  exam: Exam,
+  subjectId: string,
+  questionId: string
+): boolean {
+  const suffix = `PYQs/${exam}/${subjectId}/explanations/${questionId}.md`;
+  return Object.keys(detailedExplanationModules).some((key) => key.endsWith(suffix));
+}
+
+export async function loadDetailedExplanation(
+  exam: Exam,
+  subjectId: string,
+  questionId: string
+): Promise<string | null> {
+  const suffix = `PYQs/${exam}/${subjectId}/explanations/${questionId}.md`;
+  const key = Object.keys(detailedExplanationModules).find((item) => item.endsWith(suffix));
+
+  if (!key) return null;
+
+  try {
+    return await detailedExplanationModules[key]();
+  } catch {
+    return null;
+  }
+}
+
+export function findQuestion(questionId: string): PYQQuestion | undefined {
+  const exams: Exam[] = ["NEET-PG", "INI-CET", "FMGE"];
+
+  for (const exam of exams) {
+    const question = getAllQuestions(exam).find((q) => q.id === questionId);
+    if (question) return question;
+  }
+
+  return undefined;
 }
 
 export function getAllQuestions(exam: Exam): PYQQuestion[] {
