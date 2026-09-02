@@ -1,9 +1,10 @@
 import { ArrowLeft, Bookmark, ChevronRight, ClipboardCheck, Clock, Pause, Play } from "lucide-react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { getAllQuestions, loadExplanations } from "../data/questions";
+import { findQuestion, getAllQuestions, hasDetailedExplanation, loadDetailedExplanation, loadExplanations } from "../data/questions";
 import { getQuestionProgress, recordDirectAnswer, saveQuizResult, toggleBookmark } from "../lib/db";
 import { useEffect, useMemo, useRef, useState } from "react";
 import QuestionCard from "../components/QuestionCard";
+import MarkdownContent from "../components/MarkdownContent";
 import type { Exam, QuizAnswer } from "../types";
 
 function shuffle<T>(items: T[]): T[] {
@@ -15,16 +16,43 @@ const HALF_TIME = 30;
 const LAST_TEN_SECONDS = 10;
 
 export default function Quiz() {
-  const { exam, subjectId } = useParams();
+  const { exam, subjectId, questionId } = useParams();
   const [search] = useSearchParams();
   const navigate = useNavigate();
-  const examId = exam as Exam;
+  const targetQuestion = useMemo(
+    () => (questionId ? findQuestion(questionId) : undefined),
+    [questionId]
+  );
+  const examId = ((exam as Exam | undefined) ?? targetQuestion?.exam ?? "NEET-PG") as Exam;
+  const isSolveLink = Boolean(questionId);
   const mode = search.get("mode") === "custom" ? "custom" : "direct";
   const ids = (search.get("ids") ?? "").split(",").filter(Boolean);
   const topic = search.get("topic") ?? "all";
 
   const pool = useMemo(() => {
-    let questions = getAllQuestions(examId);
+    if (!examId) return [];
+
+    const allQuestions = getAllQuestions(examId);
+
+    if (isSolveLink) {
+      if (!targetQuestion) return [];
+
+      const subjectQuestions = allQuestions.filter(
+        (q) => q.subjectId === targetQuestion.subjectId
+      );
+      const topicQuestions = subjectQuestions.filter(
+        (q) => q.topicId === targetQuestion.topicId
+      );
+
+      // A shared PYQ starts the session. If its topic has at least 5 questions,
+      // continue with that topic; otherwise fall back to a subject mixed bag.
+      const candidates = topicQuestions.length >= 5 ? topicQuestions : subjectQuestions;
+      const remaining = shuffle(candidates.filter((q) => q.id !== targetQuestion.id)).slice(0, 39);
+
+      return [targetQuestion, ...remaining];
+    }
+
+    let questions = allQuestions;
 
     if (mode === "custom") {
       questions = questions.filter((q) => ids.includes(q.id));
@@ -34,7 +62,7 @@ export default function Quiz() {
     }
 
     return shuffle(questions).slice(0, 40);
-  }, [examId, mode, ids.join(","), subjectId, topic]);
+  }, [examId, isSolveLink, targetQuestion?.id, mode, ids.join(","), subjectId, topic]);
 
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -54,9 +82,17 @@ export default function Quiz() {
   const feedbackTimerRef = useRef<number | null>(null);
 
   const question = pool[index];
-  const explanation = question
+  const explanation = question && examId
     ? loadExplanations(examId, question.subjectId).find((x) => x.id === question.id)
     : undefined;
+  const detailedAvailable = Boolean(
+    question &&
+    examId &&
+    hasDetailedExplanation(examId, question.subjectId, question.id)
+  );
+  const [detailedExplanation, setDetailedExplanation] = useState<string | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     answersRef.current = answers;
@@ -102,6 +138,37 @@ export default function Quiz() {
     setTimerEnabled(true);
     setFeedback("");
   }, [question?.id]);
+  useEffect(() => {
+    setDetailedExplanation(null);
+    setShowDetails(false);
+    setLoadingDetails(false);
+  }, [question?.id]);
+
+  const toggleDetails = async () => {
+    if (!question || !examId || !detailedAvailable) return;
+
+    if (showDetails) {
+      setShowDetails(false);
+      return;
+    }
+
+    if (!detailedExplanation) {
+      setLoadingDetails(true);
+      const content = await loadDetailedExplanation(
+        examId,
+        question.subjectId,
+        question.id
+      );
+      setDetailedExplanation(content);
+      setLoadingDetails(false);
+      if (!content) {
+        showFeedback("Detailed explanation unavailable");
+        return;
+      }
+    }
+
+    setShowDetails(true);
+  };
 
   const showFeedback = (message: string) => {
     if (feedbackTimerRef.current !== null) window.clearTimeout(feedbackTimerRef.current);
@@ -307,14 +374,47 @@ export default function Quiz() {
       {/* QuestionCard contains only the question/options while active. */}
       <QuestionCard
         question={question}
-        explanation={explanation}
         selected={selected}
         submitted={submitted}
         timedOut={timedOut}
         bookmarked={bookmarked}
         onSelect={handleOptionSelect}
         onBookmark={bookmark}
+        hasDetailedExplanation={detailedAvailable}
+        onShareFeedback={showFeedback}
       />
+
+      {submitted && explanation && (
+        <section className="mt-3 w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3.5 py-4 sm:px-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Explanation
+          </p>
+          <p className="mt-2 text-sm leading-6 text-slate-300">{explanation.e}</p>
+
+          {detailedAvailable && (
+            <>
+              <button
+                type="button"
+                onClick={toggleDetails}
+                disabled={loadingDetails}
+                className="mt-3 inline-flex items-center rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-750 disabled:opacity-60"
+              >
+                {loadingDetails
+                  ? "LOADING..."
+                  : showDetails
+                    ? "HIDE DETAILS ↑"
+                    : "VIEW MORE ↓"}
+              </button>
+
+              {showDetails && detailedExplanation && (
+                <div className="mt-4 border-t border-slate-800 pt-4">
+                  <MarkdownContent content={detailedExplanation} />
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      )}
 
       {/* Temporary feedback only; never a permanent disclaimer. */}
       <div
@@ -384,7 +484,7 @@ export default function Quiz() {
 
               <button type="button" onClick={next} className={`flex-1 ${actionClass}`}>
                 <span className="flex items-center justify-center gap-2">
-                  NEXT
+                  {isSolveLink ? "SOLVE MORE" : "NEXT"}
                   <ChevronRight size={18} />
                 </span>
               </button>
