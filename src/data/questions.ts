@@ -28,8 +28,7 @@ function parseQuestions(
   subjectId: string
 ): PYQQuestion[] {
   try {
-    const data = JSON.parse(raw);
-    const questions: CompactQuestion[] = data.questions ?? [];
+    const questions: CompactQuestion[] = JSON.parse(raw);
 
     return questions.map((q) => ({
       id: q.id,
@@ -50,7 +49,7 @@ function parseQuestions(
 
 function parseExplanations(raw: string): PYQExplanation[] {
   try {
-    return JSON.parse(raw).explanations ?? [];
+    return JSON.parse(raw);
   } catch {
     return [];
   }
