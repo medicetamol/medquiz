@@ -8,6 +8,7 @@ import ModuleBuilder from "./pages/ModuleBuilder";
 import Quiz from "./pages/Quiz";
 import Result from "./pages/Result";
 import Progress from "./pages/Progress";
+import AIPrompt from "./pages/AIPrompt";
 
 export default function App() {
   return (
@@ -20,6 +21,8 @@ export default function App() {
         <Route path="/module/:exam" element={<ModuleBuilder />} />
         <Route path="/quiz/:exam/:subjectId" element={<Quiz />} />
         <Route path="/quiz/:exam/custom" element={<Quiz />} />
+        <Route path="/solve/:questionId" element={<Quiz />} />
+        <Route path="/ai/:questionId" element={<AIPrompt />} />
         <Route path="/result/:exam" element={<Result />} />
         <Route path="/progress" element={<Progress />} />
       </Routes>
