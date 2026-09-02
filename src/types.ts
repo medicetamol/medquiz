@@ -16,9 +16,7 @@ export interface PYQQuestion {
 
 export interface PYQExplanation {
   id: string;
-  explanation: string;
-  keyPoint?: string;
-  image?: string;
+  e: string;
 }
 
 export interface QuestionProgress {
