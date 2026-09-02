@@ -1,0 +1,171 @@
+[
+  {
+    "id": "PG23M001",
+    "y": 2023,
+    "t": "Virology",
+    "q": "A patient hailing from Delhi presents with fever, arthralgia, and extensive petechial rash for 3 days. Laboratory investigations reveal a platelet count of 20,000 cells/mm³, prolonged bleeding time, and normal clotting time. What is the most likely diagnosis?",
+    "o": [
+      "Dengue",
+      "Malaria",
+      "Scrub typhus",
+      "Typhoid"
+    ],
+    "a": 0
+  },
+  {
+    "id": "PG23M002",
+    "y": 2023,
+    "t": "Parasitology",
+    "q": "Which of the following statements is true about Trichomonas vaginalis?",
+    "o": [
+      "It cannot be cultured",
+      "Twitching motility is seen on wet saline mount",
+      "Cysts are seen on wet saline mount of vaginal secretions",
+      "It is not a sexually transmitted infection"
+    ],
+    "a": 1
+  },
+  {
+    "id": "PG23M003",
+    "y": 2023,
+    "t": "Parasitology",
+    "q": "A lady from West Rajasthan presents with an ulcer surrounded by erythema on the right leg. Microscopy of a biopsy from the edge of the ulcer shows organisms with dark-staining nuclei and kinetoplasts. What is the most likely causative agent?",
+    "o": [
+      "Leishmania tropica",
+      "Babesia",
+      "Trypanosoma",
+      "Histoplasma"
+    ],
+    "a": 0
+  },
+  {
+    "id": "PG23M004",
+    "y": 2023,
+    "t": "Virology",
+    "q": "A child presents with fever and rash. Urine examination shows cells with an owl's-eye appearance. What is the most likely diagnosis?",
+    "o": [
+      "Cytomegalovirus",
+      "Epstein-Barr virus",
+      "Herpes simplex virus",
+      "Toxoplasma gondii"
+    ],
+    "a": 0
+  },
+  {
+    "id": "PG23M005",
+    "y": 2023,
+    "t": "Parasitology",
+    "q": "Infection with Clonorchis sinensis is associated with an increased risk of which malignancy?",
+    "o": [
+      "Cervical cancer",
+      "Cholangiocarcinoma",
+      "Gastric carcinoma",
+      "Bladder carcinoma"
+    ],
+    "a": 1
+  },
+  {
+    "id": "PG23M006",
+    "y": 2023,
+    "t": "Mycology",
+    "q": "A patient with poorly controlled HIV infection presents with persistent cough and weight loss. Fungal culture of sputum is negative. Gomori methenamine silver staining shows darkly stained crescent-shaped cysts. What is the most likely causative organism?",
+    "o": [
+      "Paracoccidioides brasiliensis",
+      "Histoplasma capsulatum",
+      "Coccidioides immitis",
+      "Pneumocystis jirovecii"
+    ],
+    "a": 3
+  },
+  {
+    "id": "PG23M007",
+    "y": 2023,
+    "t": "Systemic Bacteriology",
+    "q": "A sewage worker presents with abdominal pain, jaundice, conjunctival injection, and hematuria for 5 days. Which of the following is the investigation of choice?",
+    "o": [
+      "Widal test",
+      "Microscopic agglutination test",
+      "Weil-Felix reaction",
+      "Paul-Bunnell test"
+    ],
+    "a": 1
+  },
+  {
+    "id": "PG23M008",
+    "y": 2023,
+    "t": "Virology",
+    "q": "Which of the following laboratory tests is used to diagnose rotavirus diarrhea?",
+    "o": [
+      "Antigen detection in the stool sample",
+      "Antigen detection in blood",
+      "Antibody detection in serum",
+      "Light microscopy of stool specimen"
+    ],
+    "a": 0
+  },
+  {
+    "id": "PG23M009",
+    "y": 2023,
+    "t": "Parasitology",
+    "q": "A boy presents with fever and chills. A rapid test is positive for the specific antigen HRP-2. Which species of Plasmodium is the most likely causative agent?",
+    "o": [
+      "Plasmodium falciparum",
+      "Plasmodium malariae",
+      "Plasmodium vivax",
+      "Plasmodium ovale"
+    ],
+    "a": 0
+  },
+  {
+    "id": "PG23M010",
+    "y": 2023,
+    "t": "Systemic Bacteriology",
+    "q": "A child presents with high fever, multiple seizures, headache, and neck rigidity. CSF analysis shows low glucose, high protein, and many polymorphs. CSF culture shows pleomorphic gram-negative bacilli. What is true about the causative organism?",
+    "o": [
+      "It is bacitracin sensitive",
+      "It produces non-lactose-fermenting colonies on MacConkey agar",
+      "It exhibits satellitism around Staphylococcus aureus colonies",
+      "It exhibits alpha hemolysis on sheep blood agar"
+    ],
+    "a": 2
+  },
+  {
+    "id": "PG23M011",
+    "y": 2023,
+    "t": "Systemic Bacteriology",
+    "q": "A man presents with dysuria and urethral discharge after unprotected sexual intercourse. Gram staining of the purulent discharge shows the characteristic organism. What is the treatment of choice for this infection?",
+    "o": [
+      "Erythromycin",
+      "Azithromycin",
+      "Ceftriaxone",
+      "Penicillin G"
+    ],
+    "a": 2
+  },
+  {
+    "id": "PG23M012",
+    "y": 2023,
+    "t": "Virology",
+    "q": "A patient presents with high fever, altered sensorium, headache, neck rigidity, and seizures and is diagnosed with HSV encephalitis. Which test can be used to confirm the diagnosis?",
+    "o": [
+      "IgM in CSF",
+      "Tzanck smear of CSF",
+      "CSF PCR for viral DNA",
+      "CSF culture on chick embryo lines"
+    ],
+    "a": 2
+  },
+  {
+    "id": "PG23M013",
+    "y": 2023,
+    "t": "Parasitology",
+    "q": "In a patient with fever and a positive filarial antigen test, what is the next appropriate method of management?",
+    "o": [
+      "Bone marrow biopsy",
+      "DEC provocation test",
+      "Detection of microfilariae in the blood smear",
+      "Ultrasound of the scrotum"
+    ],
+    "a": 2
+  }
+]
