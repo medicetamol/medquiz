@@ -1,4 +1,4 @@
-import { ArrowLeft, Bookmark, ChevronRight, ClipboardCheck, Clock, Pause, Play } from "lucide-react";
+import { ArrowLeft, Bookmark, ChevronRight, ClipboardCheck, Clock, Pause, Play, Sparkles } from "lucide-react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { findQuestion, getAllQuestions, hasDetailedExplanation, loadDetailedExplanation, loadExplanations } from "../data/questions";
 import { getQuestionProgress, recordDirectAnswer, saveQuizResult, toggleBookmark } from "../lib/db";
@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import QuestionCard from "../components/QuestionCard";
 import MarkdownContent from "../components/MarkdownContent";
 import type { Exam, QuizAnswer } from "../types";
+import { formatQuestionForShare, getSiteUrl, shareOrCopy } from "../lib/sharing";
 
 function shuffle<T>(items: T[]): T[] {
   return [...items].sort(() => Math.random() - 0.5);
@@ -300,6 +301,23 @@ export default function Quiz() {
     setSelected(choice);
   };
 
+  const askAI = async () => {
+    if (!question) return;
+
+    const aiUrl = getSiteUrl(`/ai/${question.id}`);
+    const text = `Explain this NEET PG / INI-CET PYQ using the mediCetamol AI prompt.\n\n${formatQuestionForShare(question)}\n\nAI prompt:\n${aiUrl}`;
+
+    const result = await shareOrCopy({
+      title: `Ask AI • ${question.id}`,
+      text,
+    });
+
+    showFeedback(
+      result === "copied" ? "AI prompt link copied" :
+      result === "shared" ? "Share sheet opened" : "Unable to share"
+    );
+  };
+
   const bookmark = async () => {
     if (!question) return;
     const result = await toggleBookmark(question.id);
@@ -380,15 +398,26 @@ export default function Quiz() {
         bookmarked={bookmarked}
         onSelect={handleOptionSelect}
         onBookmark={bookmark}
-        hasDetailedExplanation={detailedAvailable}
         onShareFeedback={showFeedback}
       />
 
       {submitted && explanation && (
         <section className="mt-3 w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3.5 py-4 sm:px-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Explanation
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Explanation
+            </p>
+
+            <button
+              type="button"
+              onClick={askAI}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+              aria-label="Ask AI"
+            >
+              <Sparkles size={15} />
+              <span>Ask AI</span>
+            </button>
+          </div>
           <p className="mt-2 text-sm leading-6 text-slate-300">{explanation.e}</p>
 
           {detailedAvailable && (
