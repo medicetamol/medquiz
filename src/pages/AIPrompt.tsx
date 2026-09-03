@@ -4,30 +4,20 @@ import { Link, useParams } from "react-router-dom";
 import { findQuestion } from "../data/questions";
 import { formatQuestionForShare, getSiteUrl, shareOrCopy } from "../lib/sharing";
 
-const MASTER_PROMPT = `You are a medical student preparing for NEET PG & INICET.
+const MASTER_PROMPT = `You are a medical student in an entrance exam (NEET PG & INICET).
 
-I will send you MCQs — clinical, factual/number-based, or image-based.
+Solve the following MCQ using the approach described below.
 
-For EACH question:
+1. One-line problem representation: age/sex + key symptom/sign + key discriminator(s).
 
-1. PROBLEM REPRESENTATION
-One line: age/sex + key symptom/sign + 1–2 key discriminators.
+2. Key clues only (max 3–5 bullets): highlight the discriminators; ignore fluff.
 
-2. KEY CLUES
-Give only 3–5 high-yield clues. Ignore fluff.
+3. Solve each question using an elimination-first approach as if you do NOT know the correct answer. Do not answer according to the colour marked in the question. Justify every elimination using exam-relevant logic.
 
-3. ELIMINATION-FIRST APPROACH
-Solve from scratch as if you do NOT know the correct answer.
+4. Stepwise elimination of options: eliminate options one by one with crisp reasons; include “why tempting but wrong” for close distractors.
 
-4. OPTION ELIMINATION
-Eliminate options ONE BY ONE with crisp, exam-relevant reasons.
-For close distractors, state: “Tempting, but wrong because…”
+Keep the response concise and focused on high-yield, exam-relevant points.
 
-5. FINAL ANSWER
-State the correct option clearly.
-
-Keep the response VERY CONCISE.
-Prioritize high-yield NEET PG/INICET reasoning over lengthy explanations.
 Use standard medical terminology.`;
 
 export default function AIPrompt() {
@@ -72,7 +62,7 @@ export default function AIPrompt() {
     <main className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-5 sm:py-8">
       <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 sm:p-6">
         <div className="flex items-center gap-2 text-sm font-semibold text-slate-100">
-          <Sparkles size={17} /> AI Explanation Prompt
+          <Sparkles size={17} /> Use this Prompt to solve the MCQ
         </div>
         <p className="mt-1 text-xs text-slate-500">{question.id}</p>
 
