@@ -28,7 +28,7 @@ export default function QuestionCard({
 
   const shareQuestion = async () => {
     const result = await shareOrCopy({
-      title: `mediCetamol • ${question.id}`,
+      title: "Share PYQ • mediceTaMol",
       text: formatQuestionForShare(question),
       url: solveUrl,
     });
