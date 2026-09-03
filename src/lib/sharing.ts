@@ -1,48 +1,53 @@
+import type { PYQQuestion } from "../types";
+
+const SITE_ORIGIN = "https://medicetamol.github.io/medquiz";
+
 export function getSiteUrl(path: string): string {
-  const base = import.meta.env.BASE_URL.endsWith("/")
-    ? import.meta.env.BASE_URL.slice(0, -1)
-    : import.meta.env.BASE_URL;
-
-  return `${window.location.origin}${base}${path.startsWith("/") ? path : `/${path}`}`;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${SITE_ORIGIN}${normalizedPath}`;
 }
 
-export async function shareOrCopy(payload: {
-  title: string;
-  text: string;
-  url?: string;
-}): Promise<"shared" | "copied" | "failed"> {
-  const shareData = {
-    title: payload.title,
-    text: payload.text,
-    ...(payload.url ? { url: payload.url } : {}),
-  };
-
-  try {
-    if (navigator.share) {
-      await navigator.share(shareData);
-      return "shared";
-    }
-
-    const combined = payload.url
-      ? `${payload.text}\n\n${payload.url}`
-      : payload.text;
-
-    await navigator.clipboard.writeText(combined);
-    return "copied";
-  } catch {
-    return "failed";
-  }
-}
-
-export function formatQuestionForShare(question: {
-  id: string;
-  year: number;
-  question: string;
-  options: string[];
-}): string {
+export function formatQuestionForShare(question: PYQQuestion): string {
   const options = question.options
     .map((option, index) => `${String.fromCharCode(65 + index)}. ${option}`)
     .join("\n");
 
-  return `${question.question}\n\n${options}\n\nPYQ: ${question.id} • ${question.year}`;
+  return `🩺 mediceTaMol\n\n${question.question}\n\n${options}\n\n📌 Directly solve here:`;
+}
+
+export type ShareResult = "shared" | "copied" | "failed";
+
+interface SharePayload {
+  title: string;
+  text: string;
+  url?: string;
+}
+
+export async function shareOrCopy({
+  title,
+  text,
+  url,
+}: SharePayload): Promise<ShareResult> {
+  const shareText = url ? `${text}\n${url}` : text;
+
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title,
+        text: shareText,
+      });
+      return "shared";
+    }
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      return "failed";
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(shareText);
+    return "copied";
+  } catch {
+    return "failed";
+  }
 }
