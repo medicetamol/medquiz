@@ -332,6 +332,8 @@ export default function Quiz() {
   // Muted neutral controls: selection does not recolour or fade the Submit button.
   const actionClass =
     "rounded-xl border border-slate-700 bg-slate-800 px-4 py-3.5 text-sm font-semibold text-slate-200 hover:bg-slate-750";
+  const solveMoreClass =
+    "rounded-xl border border-sky-400/80 bg-sky-500 px-4 py-3.5 text-sm font-bold text-slate-950 shadow-lg shadow-sky-500/20 hover:bg-sky-400";
 
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-4xl px-1 pb-24 pt-1 sm:px-2 sm:pt-2">
@@ -402,7 +404,7 @@ export default function Quiz() {
       />
 
       {submitted && explanation && (
-        <section className="mt-3 w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3.5 py-4 sm:px-5">
+        <section className="mt-6 w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3.5 py-4 sm:px-5">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Explanation
@@ -511,9 +513,9 @@ export default function Quiz() {
                 <ArrowLeft className="mx-auto" size={20} />
               </button>
 
-              <button type="button" onClick={next} className={`flex-1 ${actionClass}`}>
+              <button type="button" onClick={next} className={`flex-1 ${isSolveLink && index === 0 ? solveMoreClass : actionClass}`}>
                 <span className="flex items-center justify-center gap-2">
-                  {isSolveLink ? "SOLVE MORE" : "NEXT"}
+                  {isSolveLink && index === 0 ? "SOLVE MORE" : "NEXT"}
                   <ChevronRight size={18} />
                 </span>
               </button>
