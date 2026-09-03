@@ -308,7 +308,7 @@ export default function Quiz() {
     if (!question) return;
 
     const aiUrl = getSiteUrl(`/ai/${question.id}`);
-    const text = `Explain this NEET PG / INI-CET PYQ using the mediCetamol AI prompt.\n\n${formatQuestionForShare(question)}\n\nAI prompt:\n${aiUrl}`;
+    const text = `Explain this PYQ using the\nmediceTaMol AI prompt.\n\n${formatQuestionForShare(question)}\n\nUse this prompt to solve this:\n${aiUrl}`;
 
     const result = await shareOrCopy({
       title: `Ask AI • ${question.id}`,
@@ -419,7 +419,7 @@ export default function Quiz() {
             <button
               type="button"
               onClick={askAI}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm transition-colors hover:bg-slate-700 hover:text-white active:bg-slate-700"
               aria-label="Ask AI"
             >
               <Sparkles size={15} />
