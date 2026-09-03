@@ -263,6 +263,9 @@ export default function Quiz() {
   const next = () => {
     if (!submittedRef.current || index >= pool.length - 1) return;
     setIndex((i) => i + 1);
+    // Always place the newly loaded question at the same top position as
+    // the initial question view, rather than retaining the previous scroll.
+    window.scrollTo({ top: 0, behavior: "auto" });
   };
 
   const previous = () => {
@@ -333,23 +336,25 @@ export default function Quiz() {
   const actionClass =
     "rounded-xl border border-slate-700 bg-slate-800 px-4 py-3.5 text-sm font-semibold text-slate-200 hover:bg-slate-750";
   const solveMoreClass =
-    "rounded-xl border border-sky-400/80 bg-sky-500 px-4 py-3.5 text-sm font-bold text-slate-950 shadow-lg shadow-sky-500/20 hover:bg-sky-400";
+    "rounded-xl border border-slate-200 bg-slate-100 px-4 py-3.5 text-sm font-bold text-slate-950 shadow-lg shadow-slate-200/20 hover:bg-white";
 
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-4xl px-1 pb-24 pt-1 sm:px-2 sm:pt-2">
-      {/* 1. Progress/timer bar is the first element below the app header. */}
-      <div
-        className={`mb-2 h-1 overflow-hidden rounded-full ${danger ? "bg-red-950/70" : "bg-slate-900"}`}
-        aria-label={`Time remaining ${mm}:${ss}`}
-      >
+      {/* Timer/progress stays visible below the main app header while the question is active.
+          After Submit it returns to normal document flow. */}
+      <div className={!submitted ? "sticky top-14 z-30 -mx-1 bg-[#080b10]/95 px-1 pb-1 pt-1 backdrop-blur" : ""}>
         <div
-          className={`h-full transition-[width] duration-1000 ease-linear ${danger ? "bg-red-500" : "bg-slate-500"}`}
-          style={{ width: `${timerProgress}%` }}
-        />
-      </div>
+          className={`mb-2 h-1 overflow-hidden rounded-full ${danger ? "bg-red-950/70" : "bg-slate-900"}`}
+          aria-label={`Time remaining ${mm}:${ss}`}
+        >
+          <div
+            className={`h-full transition-[width] duration-1000 ease-linear ${danger ? "bg-red-500" : "bg-slate-500"}`}
+            style={{ width: `${timerProgress}%` }}
+          />
+        </div>
 
-      {/* 2. While solving, ONLY question number + timer/pause + bookmark are shown. */}
-      <div className="mb-2 flex items-center justify-between gap-2 px-1">
+        {/* While solving, ONLY question number + timer/pause + bookmark are shown. */}
+        <div className="mb-2 flex items-center justify-between gap-2 px-1">
         <span className="text-xs font-medium text-slate-500">
           {index + 1}/{pool.length}
         </span>
@@ -388,6 +393,7 @@ export default function Quiz() {
               fill={bookmarked ? "currentColor" : "none"}
             />
           </button>
+        </div>
         </div>
       </div>
 
