@@ -1,4 +1,4 @@
-import { Check, Share2, X } from "lucide-react";
+import { Check, Share, X } from "lucide-react";
 import type { PYQQuestion } from "../types";
 import { formatQuestionForShare, getSiteUrl, shareOrCopy } from "../lib/sharing";
 
@@ -45,7 +45,7 @@ export default function QuestionCard({
         {question.question}
       </h2>
 
-      <div className="mt-4 space-y-2">
+      <div className="mt-4 space-y-2 pb-3">
         {question.options.map((option, index) => {
           const isCorrect = submitted && index === question.answer;
           const isWrong = submitted && selected === index && index !== question.answer;
@@ -85,8 +85,8 @@ export default function QuestionCard({
       </div>
 
       {submitted && (
-        <div className="relative mt-4 border-t border-slate-800 pt-3">
-          <div className="pr-12">
+        <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-800 pt-3">
+          <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-5 text-slate-500">
               <span>{question.id}</span>
               <span>•</span>
@@ -103,11 +103,11 @@ export default function QuestionCard({
           <button
             type="button"
             onClick={shareQuestion}
-            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+            className="shrink-0 self-center rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
             aria-label="Share question"
             title="Share question"
           >
-            <Share2 size={20} strokeWidth={1.8} />
+            <Share size={20} strokeWidth={1.9} />
           </button>
         </div>
       )}
