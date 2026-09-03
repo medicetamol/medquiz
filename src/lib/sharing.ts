@@ -1,6 +1,6 @@
 import type { PYQQuestion } from "../types";
 
-const SITE_ORIGIN = "https://medicetamol.github.io/";
+const SITE_ORIGIN = "https://medicetamol.github.io";
 
 export function getSiteUrl(path: string): string {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
