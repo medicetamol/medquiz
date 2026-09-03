@@ -1,4 +1,4 @@
-import { Check, Share2, X, Sparkles } from "lucide-react";
+import { Check, Share2, X } from "lucide-react";
 import type { PYQQuestion } from "../types";
 import { formatQuestionForShare, getSiteUrl, shareOrCopy } from "../lib/sharing";
 
@@ -38,17 +38,6 @@ export default function QuestionCard({
     );
   };
 
-  const askAI = async () => {
-    const text = `Explain this NEET PG / INI-CET PYQ using the mediCetamol AI prompt.\n\n${formatQuestionForShare(question)}\n\nAI prompt:\n${aiUrl}`;
-    const result = await shareOrCopy({
-      title: `Ask AI • ${question.id}`,
-      text,
-    });
-    onShareFeedback?.(
-      result === "copied" ? "AI prompt link copied" :
-      result === "shared" ? "Share sheet opened" : "Unable to share"
-    );
-  };
 
   return (
     <section className="w-full rounded-xl border border-slate-800 bg-slate-900/70 px-2.5 py-3 sm:px-4 sm:py-5">
@@ -95,38 +84,33 @@ export default function QuestionCard({
         })}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800 pt-3">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          <span>{question.id}</span>
-          <span>•</span>
-          <span>{question.year}</span>
-          {question.topicName && (
-            <>
+      {submitted && (
+        <div className="relative mt-4 border-t border-slate-800 pt-3">
+          <div className="pr-12">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-5 text-slate-500">
+              <span>{question.id}</span>
               <span>•</span>
-              <span>{question.topicName}</span>
-            </>
-          )}
-        </div>
+              <span>{question.year}</span>
+              {question.topicName && (
+                <>
+                  <span>•</span>
+                  <span>{question.topicName}</span>
+                </>
+              )}
+            </div>
+          </div>
 
-        <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={shareQuestion}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-slate-100"
             aria-label="Share question"
+            title="Share question"
           >
-            <Share2 size={15} /> Share
-          </button>
-          <button
-            type="button"
-            onClick={askAI}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-slate-100"
-            aria-label="Ask AI"
-          >
-            <Sparkles size={15} /> Ask AI
+            <Share2 size={20} strokeWidth={1.8} />
           </button>
         </div>
-      </div>
+      )}
     </section>
   );
 }
