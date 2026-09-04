@@ -7,12 +7,21 @@ export function getSiteUrl(path: string): string {
   return `${SITE_ORIGIN}${normalizedPath}`;
 }
 
-export function formatQuestionForShare(question: PYQQuestion): string {
-  const options = question.options
+export function formatQuestionForShare(
+  question: PYQQuestion,
+  options?: { includeBranding?: boolean }
+): string {
+  const includeBranding = options?.includeBranding ?? true;
+
+  const optionsList = question.options
     .map((option, index) => `${String.fromCharCode(65 + index)}. ${option}`)
     .join("\n");
 
-  return `🩺 mediceTaMol\n\n${question.question}\n\n${options}\n\n📌 Directly solve here:`;
+  if (!includeBranding) {
+    return `${question.question}\n\n${optionsList}`;
+  }
+
+  return `🩺 mediceTaMol\n\n${question.question}\n\n${optionsList}\n\n📌 Directly solve here:`;
 }
 
 export type ShareResult = "shared" | "copied" | "failed";
