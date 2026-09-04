@@ -419,7 +419,7 @@ export default function Quiz() {
             <button
               type="button"
               onClick={askAI}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm transition-colors hover:bg-slate-700 hover:text-white active:bg-slate-700"
+              className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm transition-colors hover:bg-slate-700 hover:text-white active:bg-slate-700"
               aria-label="Ask AI"
             >
               <Sparkles size={15} />
