@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { findQuestion } from "../data/questions";
 
-
 const MASTER_PROMPT = `You are a medical student in an entrance exam (NEET PG & INICET).
 
 Solve the following MCQ using the approach described below.
@@ -58,15 +57,11 @@ Question ID: ${questionId ?? ""}`}</pre>
     .join("\n");
 
   const content = [
-    "# mediCetamol AI Prompt",
-    "",
     "Use this prompt to solve the following MCQ.",
     "",
     MASTER_PROMPT,
     "",
-    "## MCQ",
-    "",
-    `Question ID: ${question.id}`,
+    "MCQ",
     "",
     imageSrc ? `![Question image](${imageSrc})` : "",
     imageSrc ? "" : "",
