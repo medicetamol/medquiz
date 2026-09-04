@@ -14,7 +14,7 @@ export default function ExamSelect() {
         {EXAMS.map((exam) => (
           <Link
             key={exam.id}
-            to={`/pyqs/${exam}`}
+            to={`/pyqs/${exam.id}`}
             className="group rounded-2xl border border-slate-800 bg-slate-900/60 p-5 hover:border-slate-600"
           >
             <div className="flex items-center justify-between">
