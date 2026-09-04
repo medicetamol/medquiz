@@ -1,4 +1,4 @@
-import { ArrowLeft, Bookmark, ChevronRight, ClipboardCheck, Clock, Pause, Play, Sparkles } from "lucide-react";
+import { ArrowLeft, Bookmark, ChevronRight, ClipboardCheck, Clock, CornerRightUp, Pause, Play, Sparkles } from "lucide-react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { findQuestion, getAllQuestions, hasDetailedExplanation, loadDetailedExplanation, loadExplanations } from "../data/questions";
 import { getQuestionProgress, recordDirectAnswer, saveQuizResult, toggleBookmark } from "../lib/db";
@@ -409,8 +409,10 @@ export default function Quiz() {
         onShareFeedback={showFeedback}
       />
 
-      {submitted && explanation && (
+      {submitted && question && (
         <section className="mt-6 w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3.5 py-4 sm:px-5">
+          {/* Ask AI is a permanent fixture of this section and never moves,
+              regardless of whether a stored explanation exists. */}
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Explanation
@@ -426,9 +428,34 @@ export default function Quiz() {
               <span>Ask AI</span>
             </button>
           </div>
-          <p className="mt-2 text-sm leading-6 text-slate-300">{explanation.e}</p>
 
-          {detailedAvailable && (
+          {explanation ? (
+            <p className="mt-2 text-sm leading-6 text-slate-300">{explanation.e}</p>
+          ) : (
+            <div className="mt-3">
+              <p className="text-sm leading-6 text-slate-500">Explanation not available yet.</p>
+
+              {/* Instructional pointer, not a second button: no border/background,
+                  right-aligned so it visually leads the eye up to Ask AI above it. */}
+              <button
+                type="button"
+                onClick={askAI}
+                className="group mt-1.5 flex w-full items-end justify-end gap-1 text-right"
+                aria-label="Get an AI explanation for this question"
+              >
+                <span className="text-xs italic leading-5 text-slate-500 underline decoration-slate-700 decoration-dotted underline-offset-4 transition-colors group-hover:text-slate-300 group-hover:decoration-slate-500">
+                  Get an AI explanation for this question
+                </span>
+                <CornerRightUp
+                  size={15}
+                  strokeWidth={1.8}
+                  className="mb-0.5 shrink-0 text-slate-600 transition-colors group-hover:text-slate-400"
+                />
+              </button>
+            </div>
+          )}
+
+          {explanation && detailedAvailable && (
             <>
               <button
                 type="button"
