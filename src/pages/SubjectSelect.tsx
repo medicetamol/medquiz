@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { SUBJECTS, EXAMS } from "../constants";
 import { getAllQuestions } from "../data/questions";
@@ -21,6 +21,17 @@ export default function SubjectSelect() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        <Link
+          to={`/module/${examId}`}
+          className="group col-span-2 flex min-h-14 items-center justify-between gap-2 rounded-2xl border border-slate-700 bg-slate-800/60 p-4 hover:border-slate-500 hover:bg-slate-800"
+        >
+          <span className="flex items-center gap-2">
+            <Sparkles size={16} className="text-slate-400" />
+            <span className="text-sm font-bold text-slate-100">Create custom module</span>
+          </span>
+          <ArrowRight size={15} className="shrink-0 text-slate-500 group-hover:text-slate-300" />
+        </Link>
+
         {SUBJECTS.map((subject) => {
           const count = getAllQuestions(examId).filter((q) => q.subjectId === subject.id).length;
           return (
@@ -40,16 +51,6 @@ export default function SubjectSelect() {
           );
         })}
       </div>
-
-      <div className="mt-6">
-        <Link
-          to={`/module/${examId}`}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-3 text-xs font-bold text-slate-200 hover:bg-slate-800"
-        >
-          Create custom module
-        </Link>
-      </div>
-
     </main>
   );
 }
