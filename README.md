@@ -5,7 +5,7 @@
 ## 🔗 Open mediCetamol
 
 **Website:**  
-https://medicetamol.github.io/medquiz/
+https://medicetamol.github.io/
 
 ## 📚 About this app
 
@@ -52,7 +52,7 @@ Whether you're starting your preparation or doing your final revision, mediCetam
 New subjects, PYQs, explanations and features will be added progressively.
 
 **Open the website and start solving:**  
-👉 https://medicetamol.github.io/medquiz/
+👉 https://medicetamol.github.io/
 
 ---
 
