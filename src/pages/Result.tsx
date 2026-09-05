@@ -3,8 +3,7 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import type { PYQQuestion, QuizAnswer } from "../types";
 import { loadExplanations } from "../data/questions";
 
-// ─── Donut chart ────────────────────────────────────────────────────────────
-
+// ─── Donut chart ───
 function DonutChart({
   correct,
   incorrect,
@@ -61,16 +60,15 @@ function DonutChart({
         <circle cx={cx} cy={cy} r={R} fill="none" stroke="#1e293b" strokeWidth={16} />
         {arcs}
       </svg>
-      <div className="absolute flex flex-col items-center leading-none">
-        <span className="text-lg font-bold text-slate-100">{pct}%</span>
-        <span className="mt-0.5 text-[10px] text-slate-500">score</span>
+      <div className="absolute flex flex-col items-center leading-none text-center">
+        <span className="text-base font-bold text-slate-100">{pct}%</span>
+        <span className="mt-0.5 text-[10px] text-slate-500">Correct</span>
       </div>
     </div>
   );
 }
 
-// ─── Read-only question review card ─────────────────────────────────────────
-
+// ─── Read-only question review card ─────────────────────
 function ReviewCard({
   question,
   answer,
@@ -171,8 +169,7 @@ function ReviewCard({
   );
 }
 
-// ─── Main Summary page ───────────────────────────────────────────────────────
-
+// ─── Main Summary page ───────────────────────────────
 type SummaryFilter = "all" | "correct" | "incorrect" | "skipped";
 
 interface ResultState {
@@ -227,26 +224,25 @@ export default function Result() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 sm:py-14">
       {/* ── Top card ── */}
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8">
+      <div className="relative rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8">
         <p className="text-xs uppercase tracking-wider text-slate-500">Summary</p>
 
-        <div className="mt-3 flex items-center justify-between gap-4">
-          {/* Left: headline + stat boxes */}
-          <div className="min-w-0 flex-1">
-            <h1 className="text-3xl font-bold">
-              {correct}/{total}
-            </h1>
-            <p className="mt-1 text-sm text-slate-500">{accuracy}% accuracy</p>
-
-            <div className="mt-5 grid grid-cols-3 gap-2">
-              <StatBox label="Correct" value={correct} color="text-emerald-400" />
-              <StatBox label="Incorrect" value={incorrect} color="text-red-400" />
-              <StatBox label="Skipped" value={skipped} color="text-slate-400" />
-            </div>
-          </div>
-
-          {/* Right: donut */}
+        {/* Donut — absolute top-right inside the card */}
+        <div className="absolute right-6 top-6 sm:right-8 sm:top-8">
           <DonutChart correct={correct} incorrect={incorrect} skipped={skipped} />
+        </div>
+
+        {/* Headline — sits left, donut floats top-right via absolute */}
+        <div className="mt-3 pr-32">
+          <h1 className="text-3xl font-bold">{correct}/{total}</h1>
+          <p className="mt-1 text-sm text-slate-500">{accuracy}% accuracy</p>
+        </div>
+
+        {/* C / I / S boxes — full width, below headline, not affected by donut */}
+        <div className="mt-5 grid grid-cols-3 gap-2">
+          <StatBox label="Correct" value={correct} color="text-emerald-400" />
+          <StatBox label="Incorrect" value={incorrect} color="text-red-400" />
+          <StatBox label="Skipped" value={skipped} color="text-slate-400" />
         </div>
 
         {/* Actions */}
