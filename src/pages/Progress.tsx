@@ -32,10 +32,14 @@ function ClearConfirmModal({
         </div>
 
         <h2 className="text-center text-lg font-semibold text-slate-100">Are you sure?</h2>
-        <p className="mt-2 text-center text-sm text-slate-500">
+        <p className="mt-2 text-center text-sm leading-6 text-slate-400">
           {subjectName} progress will be cleared.
           <br />
           Once cleared, it can't be revived.
+          <br />
+          <span className="text-slate-500">
+            But you can solve again, and progress will be updated.
+          </span>
         </p>
 
         <div className="mt-6 grid grid-cols-2 gap-3">
@@ -261,11 +265,11 @@ export default function Progress() {
             </p>
           ) : (
             <>
-              <p className="mt-1 text-xs text-slate-600">
-                Double-tap a subject to clear its records.
+              <p className="mt-1 text-xs leading-5 text-slate-400">
+                Double-tap a subject to get options to clear records.
               </p>
-              <p className="text-xs text-slate-700">
-                Once cleared, history can't be revived.
+              <p className="text-xs leading-5 text-slate-500">
+                Once cleared, history can't be revived. But you can solve again and that will reflect in progress.
               </p>
 
               <div className="mt-3 space-y-2">
