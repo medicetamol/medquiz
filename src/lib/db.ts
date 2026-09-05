@@ -159,5 +159,26 @@ export async function getQuizResults(): Promise<QuizResult[]> {
     req.onsuccess = () => resolve(req.result as QuizResult[]);
     req.onerror = () => reject(req.error);
   });
-                                              }
-                 
+}
+
+/**
+ * Clear all progress records for a set of question IDs belonging to a subject.
+ * Called from Progress.tsx when the user double-taps and confirms a subject wipe.
+ */
+export async function clearSubjectProgress(qids: string[]): Promise<void> {
+  return openDB().then(
+    (db) =>
+      new Promise<void>((resolve, reject) => {
+        const transaction = db.transaction(PROGRESS, "readwrite");
+        const store = transaction.objectStore(PROGRESS);
+        let pending = qids.length;
+        if (pending === 0) { resolve(); return; }
+        for (const qid of qids) {
+          const req = store.delete(qid);
+          req.onsuccess = () => { pending--; if (pending === 0) resolve(); };
+          req.onerror = () => reject(req.error);
+        }
+        transaction.onerror = () => reject(transaction.error);
+      })
+  );
+}
