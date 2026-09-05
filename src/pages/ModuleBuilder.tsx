@@ -8,12 +8,14 @@ import type { Exam, StatusFilter } from "../types";
 import { getAllQuestionProgress } from "../lib/db";
 import FilterBar from "../components/FilterBar";
 
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
 function MultiSelect({
   label,
   summary,
   open,
   onToggle,
-  children
+  children,
 }: {
   label: string;
   summary: string;
@@ -32,7 +34,10 @@ function MultiSelect({
           <span className="block text-xs text-slate-500">{label}</span>
           <span className="mt-2 block truncate text-sm text-slate-100">{summary}</span>
         </span>
-        <ChevronDown size={18} className={`shrink-0 text-slate-500 transition ${open ? "rotate-180" : ""}`} />
+        <ChevronDown
+          size={18}
+          className={`shrink-0 text-slate-500 transition ${open ? "rotate-180" : ""}`}
+        />
       </button>
       {open && <div className="border-t border-slate-800">{children}</div>}
     </div>
@@ -42,12 +47,11 @@ function MultiSelect({
 function SelectionList({
   items,
   selected,
-  onToggle
+  onToggle,
 }: {
   items: Array<{ id: string; name: string }>;
   selected: string[];
   onToggle: (id: string) => void;
-  allId?: string;
 }) {
   return (
     <div className="max-h-80 overflow-y-auto">
@@ -60,9 +64,13 @@ function SelectionList({
             onClick={() => onToggle(item.id)}
             className="flex w-full items-center gap-3 border-b border-slate-800 px-4 py-3.5 text-left last:border-b-0 hover:bg-slate-900"
           >
-            <span className={`grid h-5 w-5 shrink-0 place-items-center rounded border ${
-              active ? "border-slate-300 bg-slate-100 text-slate-950" : "border-slate-600"
-            }`}>
+            <span
+              className={`grid h-5 w-5 shrink-0 place-items-center rounded border ${
+                active
+                  ? "border-slate-300 bg-slate-100 text-slate-950"
+                  : "border-slate-600"
+              }`}
+            >
               {active && <Check size={14} strokeWidth={3} />}
             </span>
             <span className="flex-1 text-sm text-slate-200">{item.name}</span>
@@ -72,6 +80,95 @@ function SelectionList({
     </div>
   );
 }
+
+// ─── Mode toggle ─────────────────────────────────────────────────────────────
+
+function ModeToggle({
+  mode,
+  onChange,
+}: {
+  mode: "quiz" | "guide";
+  onChange: (mode: "quiz" | "guide") => void;
+}) {
+  return (
+    <div className="flex overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
+      {(["guide", "quiz"] as const).map((m) => {
+        const active = mode === m;
+        return (
+          <button
+            key={m}
+            type="button"
+            onClick={() => onChange(m)}
+            className={`flex-1 py-3 text-sm font-semibold transition ${
+              active
+                ? "bg-slate-800 text-slate-100"
+                : "text-slate-500 hover:text-slate-300"
+            }`}
+          >
+            {m === "guide" ? "Guide Mode" : "Quiz Mode"}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Begin modal ─────────────────────────────────────────────────────────────
+
+function BeginModal({
+  questionCount,
+  mode,
+  onProceed,
+  onBack,
+}: {
+  questionCount: number;
+  mode: "quiz" | "guide";
+  onProceed: () => void;
+  onBack: () => void;
+}) {
+  const totalMinutes = questionCount; // 1 min per question
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+        <h2 className="text-center text-lg font-semibold text-slate-100">
+          Let's begin the Module
+        </h2>
+        <p className="mt-1 text-center text-xs text-slate-500">
+          Crafting a module for you with {questionCount} question
+          {questionCount === 1 ? "" : "s"}
+        </p>
+        {mode === "quiz" && (
+          <p className="mt-1 text-center text-xs text-slate-400">
+            Total Duration: {totalMinutes} minute{totalMinutes === 1 ? "" : "s"}
+          </p>
+        )}
+
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-100"
+          >
+            Go Back
+          </button>
+          <button
+            type="button"
+            onClick={onProceed}
+            className="rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm font-bold text-slate-950"
+          >
+            Let's Proceed
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function ModuleBuilder() {
   const { exam } = useParams();
@@ -83,10 +180,13 @@ export default function ModuleBuilder() {
   const [topics, setTopics] = useState<string[]>(["all"]);
   const [statuses, setStatuses] = useState<StatusFilter[]>(["all"]);
   const [questionCount, setQuestionCount] = useState(20);
+  const [moduleMode, setModuleMode] = useState<"quiz" | "guide">("guide");
   const [subjectOpen, setSubjectOpen] = useState(false);
   const [topicOpen, setTopicOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [progress, setProgress] = useState<Record<string, Awaited<ReturnType<typeof getAllQuestionProgress>>[number]>>({});
+  const [showBeginModal, setShowBeginModal] = useState(false);
+  const [progress, setProgress] = useState<
+    Record<string, Awaited<ReturnType<typeof getAllQuestionProgress>>[number]>
+  >({});
 
   useEffect(() => {
     getAllQuestionProgress().then((items) => {
@@ -101,7 +201,11 @@ export default function ModuleBuilder() {
     const source = subjects.includes("all")
       ? all
       : all.filter((q) => selectedSubjectSet.has(q.subjectId));
-    return Array.from(new Map(source.map((q) => [q.topicId, q.topicName ?? q.topicId])).entries())
+    return Array.from(
+      new Map(
+        source.map((q) => [q.topicId, q.topicName ?? q.topicId])
+      ).entries()
+    )
       .sort((a, b) => a[1].localeCompare(b[1]))
       .map(([id, name]) => ({ id, name }));
   }, [all, subjects, selectedSubjectSet]);
@@ -110,7 +214,6 @@ export default function ModuleBuilder() {
     return all.filter((q) => {
       if (!subjects.includes("all") && !selectedSubjectSet.has(q.subjectId)) return false;
       if (!topics.includes("all") && !selectedTopicSet.has(q.topicId)) return false;
-
       if (statuses.includes("all")) return true;
       const p = progress[q.id];
       return statuses.some((status) => {
@@ -139,10 +242,7 @@ export default function ModuleBuilder() {
   };
 
   const toggleTopics = (id: string) => {
-    if (id === "all") {
-      setTopics(["all"]);
-      return;
-    }
+    if (id === "all") { setTopics(["all"]); return; }
     const next = topics.filter((x) => x !== "all");
     if (next.includes(id)) {
       const without = next.filter((x) => x !== id);
@@ -152,14 +252,10 @@ export default function ModuleBuilder() {
     }
   };
 
-  const create = () => {
-    if (creating) return;
-    setCreating(true);
-
+  const buildQuestionList = () => {
     const filtered = all.filter((q) => {
       if (!subjects.includes("all") && !selectedSubjectSet.has(q.subjectId)) return false;
       if (!topics.includes("all") && !selectedTopicSet.has(q.topicId)) return false;
-
       if (statuses.includes("all")) return true;
       const p = progress[q.id];
       return statuses.some((status) => {
@@ -171,16 +267,35 @@ export default function ModuleBuilder() {
     });
 
     const unique = Array.from(new Map(filtered.map((q) => [q.id, q])).values());
-    const shuffled = [...unique].sort(() => Math.random() - 0.5).slice(0, questionCount);
-
-    if (shuffled.length) {
-      const params = new URLSearchParams();
-      params.set("mode", "custom");
-      params.set("ids", shuffled.map((q) => q.id).join(","));
-      navigate(`/quiz/${examId}/custom?${params.toString()}`);
-    }
-    setCreating(false);
+    return [...unique].sort(() => Math.random() - 0.5).slice(0, questionCount);
   };
+
+  const handleCreateClick = () => {
+    if (matchingCount === 0) return;
+    setShowBeginModal(true);
+  };
+
+  const handleProceed = () => {
+    setShowBeginModal(false);
+    const shuffled = buildQuestionList();
+    if (!shuffled.length) return;
+
+    // Request fullscreen before navigating — requires the user gesture from this click
+    const el = document.documentElement;
+    if (el.requestFullscreen) {
+      el.requestFullscreen().catch(() => {
+        // Fullscreen may be denied on some browsers; proceed anyway
+      });
+    }
+
+    const params = new URLSearchParams();
+    params.set("source", "custom");
+    params.set("mode", moduleMode);
+    params.set("ids", shuffled.map((q) => q.id).join(","));
+    navigate(`/quiz/${examId}/custom?${params.toString()}`);
+  };
+
+  const actualCount = Math.min(matchingCount, questionCount);
 
   const subjectSummary = subjects.includes("all")
     ? "All subjects"
@@ -189,55 +304,62 @@ export default function ModuleBuilder() {
     ? "All topics"
     : `${topics.length} topic${topics.length > 1 ? "s" : ""} selected`;
 
-  const subjectSummaryForMessage = subjects.includes("all")
-    ? "all subjects"
-    : (() => {
-        const names = subjects
-          .map((id) => SUBJECTS.find((s) => s.id === id)?.name)
-          .filter((name): name is string => Boolean(name));
-        if (names.length <= 1) return names[0] ?? "the selected subjects";
-        if (names.length === 2) return `${names[0]} and ${names[1]}`;
-        return `${names.slice(0, -1).join(", ")}, and ${names[names.length - 1]}`;
-      })();
-
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-      <Link to={`/pyqs/${exam}`} className="mb-6 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-200">
+    <main className="mx-auto flex max-h-screen max-w-3xl flex-col px-4 py-8 sm:px-6">
+      <Link
+        to={`/pyqs/${exam}`}
+        className="mb-6 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-200"
+      >
         <ArrowLeft size={16} /> {EXAMS.find((e) => e.id === examId)?.name}
       </Link>
 
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Create Module</h1>
-        <p className="mt-1 text-sm text-slate-500">Choose subjects, topics, status and question count.</p>
+        <p className="mt-1 text-sm text-slate-500">
+          Choose subjects, topics, status and question count.
+        </p>
       </div>
 
-      <div className="space-y-3">
-        <MultiSelect label="Subject" summary={subjectSummary} open={subjectOpen} onToggle={() => setSubjectOpen((v) => !v)}>
+      {/* Filters */}
+      <div className="space-y-3 overflow-y-auto pb-2">
+        <MultiSelect
+          label="Subject"
+          summary={subjectSummary}
+          open={subjectOpen}
+          onToggle={() => setSubjectOpen((v) => !v)}
+        >
           <SelectionList
-            items={[{ id: "all", name: "All subjects" }, ...SUBJECTS.map((s) => ({ id: s.id, name: s.name }))]}
+            items={[
+              { id: "all", name: "All subjects" },
+              ...SUBJECTS.map((s) => ({ id: s.id, name: s.name })),
+            ]}
             selected={subjects}
             onToggle={toggleSubjects}
           />
         </MultiSelect>
 
-        <MultiSelect label="Topic" summary={topicSummary} open={topicOpen} onToggle={() => setTopicOpen((v) => !v)}>
+        <MultiSelect
+          label="Topic"
+          summary={topicSummary}
+          open={topicOpen}
+          onToggle={() => setTopicOpen((v) => !v)}
+        >
           <SelectionList
             items={[{ id: "all", name: "All topics" }, ...topicItems]}
             selected={topics}
             onToggle={toggleTopics}
           />
         </MultiSelect>
-      </div>
 
-      <div className="mt-4">
         <FilterBar value={statuses} onChange={setStatuses} />
       </div>
 
-      <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-sm leading-6 text-slate-400">
-        Creating a module for you with {Math.min(matchingCount, questionCount)} questions from {subjectSummaryForMessage}.
-      </div>
+      {/* Mode toggle + sticky bottom */}
+      <div className="sticky bottom-3 mt-5 space-y-3">
+        {/* Mode toggle */}
+        <ModeToggle mode={moduleMode} onChange={setModuleMode} />
 
-      <div className="sticky bottom-3 mt-5">
+        {/* Bottom bar */}
         <div className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-[#10161e]/95 p-3 shadow-soft backdrop-blur">
           <label className="w-1/4 min-w-[78px] rounded-xl border border-slate-700 bg-slate-900 px-3 py-2">
             <span className="block text-[10px] text-slate-500">Questions</span>
@@ -248,25 +370,39 @@ export default function ModuleBuilder() {
               aria-label="Number of questions"
             >
               {[10, 20, 30, 40, 50, 60, 80, 100].map((n) => (
-                <option key={n} value={n} className="bg-slate-900">{n}</option>
+                <option key={n} value={n} className="bg-slate-900">
+                  {n}
+                </option>
               ))}
             </select>
           </label>
 
           <span className="flex-1 text-center text-xs text-slate-500">
-            {matchingCount === 0 ? "No questions available" : `${Math.min(matchingCount, questionCount)} questions`}
+            {matchingCount === 0
+              ? "No questions available"
+              : `${actualCount} question${actualCount === 1 ? "" : "s"}`}
           </span>
 
           <button
             type="button"
-            disabled={matchingCount === 0 || creating}
-            onClick={() => void create()}
+            disabled={matchingCount === 0}
+            onClick={handleCreateClick}
             className="rounded-xl bg-slate-100 px-5 py-3 text-xs font-bold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40"
           >
             CREATE MODULE
           </button>
         </div>
       </div>
+
+      {/* Begin modal */}
+      {showBeginModal && (
+        <BeginModal
+          questionCount={actualCount}
+          mode={moduleMode}
+          onProceed={handleProceed}
+          onBack={() => setShowBeginModal(false)}
+        />
+      )}
     </main>
   );
 }
