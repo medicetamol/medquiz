@@ -19,10 +19,14 @@ export default function App() {
         <Route path="/pyqs/:exam" element={<SubjectSelect />} />
         <Route path="/pyqs/:exam/:subjectId" element={<Subject />} />
         <Route path="/module/:exam" element={<ModuleBuilder />} />
+        {/* Direct subject PYQ drill */}
         <Route path="/quiz/:exam/:subjectId" element={<Quiz />} />
+        {/* Custom module (source=custom, mode=quiz|guide in search params) */}
         <Route path="/quiz/:exam/custom" element={<Quiz />} />
+        {/* Shared solve link */}
         <Route path="/solve/:questionId" element={<Quiz />} />
         <Route path="/ai/:questionId" element={<AIPrompt />} />
+        {/* Summary (formerly Result) */}
         <Route path="/result/:exam" element={<Result />} />
         <Route path="/progress" element={<Progress />} />
       </Routes>
