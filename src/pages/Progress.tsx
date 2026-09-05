@@ -1,15 +1,85 @@
-import { Activity, BarChart3, CheckCircle2, Flame, Target, XCircle } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { getAllQuestionProgress, getDailyActivity } from "../lib/db";
+import { Activity, BarChart3, CheckCircle2, Flame, Target, Trash2, XCircle } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { getAllQuestionProgress, getDailyActivity, clearSubjectProgress } from "../lib/db";
 import { SUBJECTS } from "../constants";
 import { getAllQuestions } from "../data/questions";
 import type { DailyActivity, QuestionProgress } from "../types";
 
 const EXAMS = ["NEET-PG", "INI-CET", "FMGE"] as const;
 
+// ─── Confirm modal ────────────────────────────────────────────────────────────
+
+function ClearConfirmModal({
+  subjectName,
+  onConfirm,
+  onCancel,
+}: {
+  subjectName: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+        {/* Dustbin icon */}
+        <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-red-900/60 bg-red-950/40">
+          <Trash2 size={26} className="text-red-400" strokeWidth={1.6} />
+        </div>
+
+        <h2 className="text-center text-lg font-semibold text-slate-100">Are you sure?</h2>
+        <p className="mt-2 text-center text-sm text-slate-500">
+          {subjectName} progress will be cleared.
+          <br />
+          Once cleared, it can't be revived.
+        </p>
+
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="rounded-xl border border-red-800/60 bg-red-950/40 px-4 py-3 text-sm font-semibold text-red-300 hover:bg-red-900/40"
+          >
+            Yes
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-100"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
+
 export default function Progress() {
+  const location = useLocation();
+  const locationState = location.state as {
+    scrollToSubjects?: boolean;
+    highlightSubject?: string;
+  } | null;
+
   const [progress, setProgress] = useState<QuestionProgress[]>([]);
   const [activity, setActivity] = useState<DailyActivity[]>([]);
+  const [clearTarget, setClearTarget] = useState<{
+    subjectId: string;
+    subjectName: string;
+  } | null>(null);
+  const [clearing, setClearing] = useState(false);
+
+  // Double-tap tracking
+  const lastTapRef = useRef<{ subjectId: string; time: number } | null>(null);
+
+  const subjectsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     Promise.all([getAllQuestionProgress(), getDailyActivity()]).then(([p, a]) => {
@@ -17,6 +87,15 @@ export default function Progress() {
       setActivity(a);
     });
   }, []);
+
+  // Scroll to subjects section when arriving from Subject.tsx link
+  useEffect(() => {
+    if (locationState?.scrollToSubjects && subjectsRef.current) {
+      setTimeout(() => {
+        subjectsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
+    }
+  }, [locationState?.scrollToSubjects]);
 
   const directAttempts = progress.reduce((n, p) => n + p.attempts, 0);
   const correct = progress.reduce((n, p) => n + p.correctAttempts, 0);
@@ -56,26 +135,68 @@ export default function Progress() {
     const c = rows.reduce((n, p) => n + p.correctAttempts, 0);
     return {
       ...subject,
+      qids: Array.from(ids),
       attempts,
       correct: c,
-      accuracy: attempts ? Math.round((c / attempts) * 100) : null
+      accuracy: attempts ? Math.round((c / attempts) * 100) : null,
     };
-  }).filter((s) => s.attempts > 0).sort((a, b) => (a.accuracy ?? 0) - (b.accuracy ?? 0));
+  })
+    .filter((s) => s.attempts > 0)
+    .sort((a, b) => (a.accuracy ?? 0) - (b.accuracy ?? 0));
 
   const weekly = [...Array(7)].map((_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
     const key = d.toISOString().slice(0, 10);
-    return activity.find((a) => a.date === key) ?? { date: key, questions: 0, correct: 0, incorrect: 0 };
+    return (
+      activity.find((a) => a.date === key) ?? {
+        date: key,
+        questions: 0,
+        correct: 0,
+        incorrect: 0,
+      }
+    );
   });
+
+  // Double-tap handler for subject rows
+  const handleSubjectTap = (subjectId: string, subjectName: string) => {
+    const now = Date.now();
+    const last = lastTapRef.current;
+    if (last && last.subjectId === subjectId && now - last.time < 500) {
+      // Double tap detected
+      lastTapRef.current = null;
+      setClearTarget({ subjectId, subjectName });
+    } else {
+      lastTapRef.current = { subjectId, time: now };
+    }
+  };
+
+  const handleConfirmClear = async () => {
+    if (!clearTarget || clearing) return;
+    setClearing(true);
+
+    const subject = subjectStats.find((s) => s.id === clearTarget.subjectId);
+    if (subject) {
+      await clearSubjectProgress(subject.qids);
+    }
+
+    // Refresh progress
+    const [p] = await Promise.all([getAllQuestionProgress()]);
+    setProgress(p);
+    setClearing(false);
+    setClearTarget(null);
+  };
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
       <div className="mb-7">
         <h1 className="text-2xl font-bold">Progress</h1>
-        <p className="mt-1 text-sm text-slate-500">Your direct QBank performance and activity.</p>
+        <p className="mt-1 text-sm text-slate-500">
+          Your direct QBank performance and activity.
+        </p>
       </div>
 
+      {/* Metrics */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Metric icon={Activity} label="Questions" value={directAttempts} />
         <Metric icon={CheckCircle2} label="Correct" value={correct} />
@@ -87,6 +208,7 @@ export default function Progress() {
         Answer recorded — custom modules do not alter correctness statistics.
       </div>
 
+      {/* Weekly chart */}
       <section className="mt-5 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
         <div className="flex items-center justify-between">
           <div>
@@ -101,9 +223,15 @@ export default function Progress() {
             const max = Math.max(1, ...weekly.map((x) => x.questions));
             const height = Math.max(5, (day.questions / max) * 100);
             return (
-              <div key={day.date} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
+              <div
+                key={day.date}
+                className="flex h-full flex-1 flex-col items-center justify-end gap-2"
+              >
                 <span className="text-[10px] text-slate-500">{day.questions || ""}</span>
-                <div className="w-full rounded-t-md bg-slate-700" style={{ height: `${height}%` }} />
+                <div
+                  className="w-full rounded-t-md bg-slate-700"
+                  style={{ height: `${height}%` }}
+                />
                 <span className="text-[9px] text-slate-600">{day.date.slice(5)}</span>
               </div>
             );
@@ -111,6 +239,7 @@ export default function Progress() {
         </div>
       </section>
 
+      {/* Performance + Subjects */}
       <section className="mt-5 grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
           <h2 className="font-bold">Performance</h2>
@@ -121,30 +250,71 @@ export default function Progress() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+        {/* Subjects section */}
+        <div ref={subjectsRef} className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
           <h2 className="font-bold">Subjects</h2>
+
           {subjectStats.length === 0 ? (
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              Subject-level performance will appear after you solve PYQs directly from the QBank.
+              Subject-level performance will appear after you solve PYQs directly from
+              the QBank.
             </p>
           ) : (
-            <div className="mt-4 space-y-2">
-              {subjectStats.slice(0, 8).map((s) => (
-                <div key={s.id} className="flex items-center gap-3 rounded-xl bg-slate-950 p-3">
-                  <span className="flex-1 text-sm text-slate-300">{s.name}</span>
-                  <span className="text-xs text-slate-500">{s.attempts} Q</span>
-                  <b className="text-xs">{s.accuracy}%</b>
-                </div>
-              ))}
-            </div>
+            <>
+              <p className="mt-1 text-xs text-slate-600">
+                Double-tap a subject to clear its records.
+              </p>
+              <p className="text-xs text-slate-700">
+                Once cleared, history can't be revived.
+              </p>
+
+              <div className="mt-3 space-y-2">
+                {subjectStats.map((s) => {
+                  const isHighlighted = locationState?.highlightSubject === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => handleSubjectTap(s.id, s.name)}
+                      className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition ${
+                        isHighlighted
+                          ? "bg-slate-800 ring-1 ring-slate-600"
+                          : "bg-slate-950 hover:bg-slate-900"
+                      }`}
+                    >
+                      <span className="flex-1 text-sm text-slate-300">{s.name}</span>
+                      <span className="text-xs text-slate-500">{s.attempts} Q</span>
+                      <b className="text-xs">{s.accuracy}%</b>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </section>
+
+      {/* Clear confirm modal */}
+      {clearTarget && (
+        <ClearConfirmModal
+          subjectName={clearTarget.subjectName}
+          onConfirm={() => void handleConfirmClear()}
+          onCancel={() => setClearTarget(null)}
+        />
+      )}
     </main>
   );
 }
 
-function Metric({ icon: Icon, label, value }: { icon: typeof Activity; label: string; value: string | number }) {
+function Metric({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Activity;
+  label: string;
+  value: string | number;
+}) {
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
       <Icon size={18} className="text-slate-500" />
@@ -154,7 +324,15 @@ function Metric({ icon: Icon, label, value }: { icon: typeof Activity; label: st
   );
 }
 
-function Row({ icon: Icon, label, value }: { icon: typeof CheckCircle2; label: string; value: number }) {
+function Row({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof CheckCircle2;
+  label: string;
+  value: number;
+}) {
   return (
     <div className="flex items-center gap-3 rounded-xl bg-slate-950 p-3">
       <Icon size={17} className="text-slate-500" />
