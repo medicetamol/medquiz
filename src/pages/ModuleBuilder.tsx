@@ -305,7 +305,7 @@ export default function ModuleBuilder() {
     : `${topics.length} topic${topics.length > 1 ? "s" : ""} selected`;
 
   return (
-    <main className="mx-auto flex max-h-screen max-w-3xl flex-col px-4 py-8 sm:px-6">
+    <main className="mx-auto max-w-3xl px-4 pb-36 pt-8 sm:px-6">
       <Link
         to={`/pyqs/${exam}`}
         className="mb-6 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-200"
@@ -354,12 +354,14 @@ export default function ModuleBuilder() {
         <FilterBar value={statuses} onChange={setStatuses} />
       </div>
 
-      {/* Mode toggle + sticky bottom */}
-      <div className="sticky bottom-3 mt-5 space-y-3">
-        {/* Mode toggle */}
+      {/* Mode toggle — normal document flow, same z-level as filters */}
+      <div className="mt-4">
         <ModeToggle mode={moduleMode} onChange={setModuleMode} />
+      </div>
 
-        {/* Bottom bar */}
+      {/* Bottom bar — fixed to bottom of viewport with 10px margin */}
+      <div className="fixed inset-x-0 bottom-[10px] z-30 px-4 sm:px-6">
+        <div className="mx-auto max-w-3xl">
         <div className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-[#10161e]/95 p-3 shadow-soft backdrop-blur">
           <label className="w-1/4 min-w-[78px] rounded-xl border border-slate-700 bg-slate-900 px-3 py-2">
             <span className="block text-[10px] text-slate-500">Questions</span>
@@ -391,6 +393,7 @@ export default function ModuleBuilder() {
           >
             CREATE MODULE
           </button>
+        </div>
         </div>
       </div>
 
